@@ -1,0 +1,3164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JUSTICE CAMPUS — Safe & Transparent Student Grievance Portal</title>
+  <meta name="description" content="A digital grievance management platform designed for colleges. Your Voice, Our Responsibility. Developed by Team Justice Minds: Oviya K, Dhilipkumar N B, Anbu S, Vaishnavi D." />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            navy: {
+              950: '#070f1e',
+              900: '#0b192c',
+              850: '#112240',
+              800: '#1e3e62',
+              700: '#204d74'
+            },
+            azure: {
+              400: '#38bdf8',
+              500: '#0284c7',
+              600: '#0369a1'
+            },
+            charcoal: '#1e2022',
+            halfwhite: '#f8fafc',
+            warmtaupe: '#a89f91',
+            mutedgold: '#e5a93c'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 and Babel Standalone for in-browser execution -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      background-color: #070f1e;
+      color: #f1f5f9;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #070f1e; }
+    ::-webkit-scrollbar-thumb { background: #1e3e62; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #0284c7; }
+    .glass-card {
+      background: rgba(11, 25, 44, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    @keyframes pulseSlow {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .animate-pulse-slow {
+      animation: pulseSlow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+    @media print {
+      body * { visibility: hidden; }
+      #printable-docket, #printable-docket * { visibility: visible; }
+      #printable-docket { position: absolute; left: 0; top: 0; width: 100%; color: #000; }
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-sky-500 selection:text-white antialiased">
+
+  <div id="root"></div>
+
+  <!-- Main Standalone Application Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // ====================================================================
+    // MASTER DATA & SEED ACCOUNTS
+    // ====================================================================
+
+    // Student accounts requested in prompt: Dharsan, Kaviya, Jeevitha, Sachin, Nethra
+    // Email: studentskit@gmail.com ; Password: studentkit1
+    // Admin accounts requested: Oviya, Dhilipkumar ; Password: admin1230
+    const INITIAL_USERS = [
+      {
+        userId: "STU2026-01",
+        fullName: "Dharsan",
+        email: "studentskit@gmail.com",
+        altEmail: "dharsan@justicecampus.edu",
+        password: "studentkit1",
+        role: "student",
+        registerNo: "711522CS101",
+        department: "Computer Science & Engineering",
+        yearOfStudy: "3rd Year",
+        semester: "5th Semester",
+        phone: "+91 98401 11222",
+        hostelResident: true,
+        hostelName: "Cauvery Boys Hostel - Room 304",
+        avatar: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=200"
+      },
+      {
+        userId: "STU2026-02",
+        fullName: "Kaviya",
+        email: "kaviya@justicecampus.edu",
+        altEmail: "studentskit@gmail.com",
+        password: "studentkit1",
+        role: "student",
+        registerNo: "711522AI042",
+        department: "Artificial Intelligence & Data Science",
+        yearOfStudy: "3rd Year",
+        semester: "5th Semester",
+        phone: "+91 98402 22333",
+        hostelResident: true,
+        hostelName: "Kaveri Girls Hostel - Room 212",
+        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
+      },
+      {
+        userId: "STU2026-03",
+        fullName: "Jeevitha",
+        email: "jeevitha@justicecampus.edu",
+        altEmail: "studentskit@gmail.com",
+        password: "studentkit1",
+        role: "student",
+        registerNo: "711522IT033",
+        department: "Information Technology",
+        yearOfStudy: "2nd Year",
+        semester: "3rd Semester",
+        phone: "+91 98403 33444",
+        hostelResident: false,
+        hostelName: "Day Scholar (Coimbatore Bus Route 7)",
+        avatar: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=200"
+      },
+      {
+        userId: "STU2026-04",
+        fullName: "Sachin",
+        email: "sachin@justicecampus.edu",
+        altEmail: "studentskit@gmail.com",
+        password: "studentkit1",
+        role: "student",
+        registerNo: "711522ME058",
+        department: "Mechanical Engineering",
+        yearOfStudy: "4th Year",
+        semester: "7th Semester",
+        phone: "+91 98404 44555",
+        hostelResident: true,
+        hostelName: "Bhavani Boys Hostel - Room 108",
+        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200"
+      },
+      {
+        userId: "STU2026-05",
+        fullName: "Nethra",
+        email: "nethra@justicecampus.edu",
+        altEmail: "studentskit@gmail.com",
+        password: "studentkit1",
+        role: "student",
+        registerNo: "711522EC079",
+        department: "Electronics & Communication Engg",
+        yearOfStudy: "3rd Year",
+        semester: "5th Semester",
+        phone: "+91 98405 55666",
+        hostelResident: false,
+        hostelName: "Day Scholar (Saravanampatti)",
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=200"
+      },
+      // Admin accounts: Oviya & Dhilipkumar ; password: admin1230
+      {
+        userId: "ADM2026-01",
+        fullName: "Oviya",
+        email: "oviya.admin@justicecampus.edu",
+        password: "admin1230",
+        role: "admin",
+        designation: "Chief Grievance Redressal Officer & Anti-Ragging Chairperson",
+        department: "Deanery of Student Affairs & Vigilance",
+        phone: "+91 94441 98765",
+        avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=200"
+      },
+      {
+        userId: "ADM2026-02",
+        fullName: "Dhilipkumar",
+        email: "dhilip.admin@justicecampus.edu",
+        password: "admin1230",
+        role: "admin",
+        designation: "Disciplinary Council Chairperson & ICC Advisor",
+        department: "Office of Campus Discipline & Ethics",
+        phone: "+91 94442 87654",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&q=80&w=200"
+      }
+    ];
+
+    // 7 Required Complaint Categories
+    const COMPLAINT_CATEGORIES = [
+      { id: "Bullying", name: "Bullying", icon: "🛡️", desc: "Verbal or physical intimidation, senior dominance, peer coercion" },
+      { id: "Harassment", name: "Harassment", icon: "⚠️", desc: "Sexual, psychological, cyber-stalking or offensive conduct" },
+      { id: "Discrimination", name: "Discrimination", icon: "⚖️", desc: "Bias based on language, region, gender, caste, or background" },
+      { id: "Academic Issues", name: "Academic Issues", icon: "📚", desc: "Evaluation discrepancies, internal marks, attendance anomalies" },
+      { id: "Hostel Issues", name: "Hostel Issues", icon: "🏠", desc: "Drinking water quality, mess hygiene, warden concerns, rooms" },
+      { id: "Campus Facilities", name: "Campus Facilities", icon: "🏢", desc: "Classroom audio-visuals, lab equipment, Wi-Fi, transport" },
+      { id: "Other Issues", name: "Other Issues", icon: "📋", desc: "Fee office, library access, extracurriculars or administration" }
+    ];
+
+    // Statutory Authorities for College Grievances
+    const AUTHORITIES_LIST = [
+      { code: "ARC", name: "Anti-Ragging Committee", head: "Dr. Oviya (Chief Vigilance Officer)" },
+      { code: "ICC", name: "Internal Complaints Committee (POSH/Women)", head: "Prof. Meenakshi Sundaram" },
+      { code: "DISC", name: "Disciplinary & Equity Council", head: "Dr. Dhilipkumar (Council Chair)" },
+      { code: "ACAD", name: "Academic Grievance Cell", head: "Dr. K. Ananthapadmanabhan (Dean Academics)" },
+      { code: "HOSTEL", name: "Hostel Administration & Welfare", head: "Col. V. Natarajan (Chief Warden)" },
+      { code: "ESTATE", name: "Campus Facilities & Infrastructure", head: "Er. M. Sivakumar (Estate Officer)" },
+      { code: "STUDENT", name: "Deanery of Student Affairs", head: "Dr. R. Rajendran (Dean)" }
+    ];
+
+    // 5 Stages of Redressal
+    const COMPLAINT_STAGES = [
+      { key: "Submitted", label: "Submitted", color: "bg-blue-500", textColor: "text-blue-400" },
+      { key: "Under Review", label: "Under Review", color: "bg-amber-500", textColor: "text-amber-400" },
+      { key: "In Progress", label: "In Progress", color: "bg-sky-500", textColor: "text-sky-400" },
+      { key: "Resolved", label: "Resolved", color: "bg-emerald-500", textColor: "text-emerald-400" },
+      { key: "Closed", label: "Closed", color: "bg-slate-400", textColor: "text-slate-300" }
+    ];
+
+    // Seed Complaints (Marked as Sample Data for Demonstration)
+    const INITIAL_COMPLAINTS = [
+      {
+        id: "CMP-DEMO-001",
+        complaintId: "JC-2026-8941",
+        studentId: "STU2026-01",
+        studentName: "Dharsan",
+        studentEmail: "studentskit@gmail.com",
+        studentRegisterNo: "711522CS101",
+        category: "Hostel Issues",
+        title: "Severe Drinking Water Contamination and Filter Breakdown",
+        description: "The RO drinking water filtration plant on the 3rd floor of Cauvery Boys Hostel has been dispensing brownish, turbid water with strong odor since Thursday. Over 15 students reported stomach aches. Despite notifying the resident warden twice, no technician was dispatched.",
+        incidentDate: "2026-11-12",
+        incidentLocation: "Cauvery Boys Hostel - 3rd Floor Water Dispenser",
+        evidenceUrl: "https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&q=80&w=600",
+        evidenceName: "water_sample_clarity_test.jpg",
+        isAnonymous: false,
+        priority: "Critical",
+        status: "In Progress",
+        assignedAuthority: "Hostel Administration & Welfare",
+        assignedOfficerName: "Col. V. Natarajan (Chief Warden)",
+        isEscalated: true,
+        escalationReason: "Pending resolution beyond 48 hours for critical student health hazard",
+        isSampleData: true,
+        createdAt: "2026-11-13T10:15:00Z",
+        updatedAt: "2026-11-15T16:30:00Z",
+        timeline: [
+          {
+            step: "Submitted",
+            title: "Grievance Docket Registered",
+            notes: "Complaint logged via student secure portal with photo evidence attached.",
+            performedBy: "Dharsan (Student)",
+            role: "Student Complainant",
+            timestamp: "2026-11-13T10:15:00Z"
+          },
+          {
+            step: "Under Review",
+            title: "Triage & Automated Severity Tagging",
+            notes: "AI triage categorized as Hostel Health Critical. Assigned to Chief Warden office.",
+            performedBy: "Justice Campus AI Engine",
+            role: "AI Automated Review",
+            timestamp: "2026-11-13T10:20:00Z"
+          },
+          {
+            step: "In Progress",
+            title: "Inspection Team Dispatched & Alternative Tanks Supplied",
+            notes: "Emergency 20L sealed bubble-top cans supplied on every floor. Water quality team collected laboratory samples for TDS/bacteria testing. Filter membrane replacement underway.",
+            performedBy: "Col. V. Natarajan",
+            role: "Chief Warden",
+            timestamp: "2026-11-14T09:00:00Z"
+          },
+          {
+            step: "In Progress",
+            title: "High-Priority SLA Escalation Notice",
+            notes: "Escalation triggered automatically by system clock exceeding 48h resolution SLA for critical health issue.",
+            performedBy: "Justice Minds Watchdog",
+            role: "Escalation Monitor",
+            timestamp: "2026-11-15T16:30:00Z"
+          }
+        ]
+      },
+      {
+        id: "CMP-DEMO-002",
+        complaintId: "JC-2026-4712",
+        studentId: "STU2026-04",
+        studentName: "Sachin",
+        studentEmail: "sachin@justicecampus.edu",
+        studentRegisterNo: "711522ME058",
+        category: "Bullying",
+        title: "Aggressive Intimidation and Senior Dominance near West Gate Parking",
+        description: "A group of senior students stopped 2nd year students repeatedly between 5:30 PM and 6:00 PM near the West Gate bike parking, forcefully demanding money and threatening to damage two-wheelers if anyone reports. Incident happened on Tuesday evening.",
+        incidentDate: "2026-11-11",
+        incidentLocation: "West Gate Cycle & Scooter Parking Shed, Block B",
+        evidenceUrl: "",
+        evidenceName: "",
+        isAnonymous: true,
+        priority: "High",
+        status: "Under Review",
+        assignedAuthority: "Anti-Ragging Committee",
+        assignedOfficerName: "Dr. Oviya (Chief Officer)",
+        isEscalated: false,
+        escalationReason: "",
+        isSampleData: true,
+        createdAt: "2026-11-12T14:40:00Z",
+        updatedAt: "2026-11-13T09:15:00Z",
+        timeline: [
+          {
+            step: "Submitted",
+            title: "Anonymous Report Lodged",
+            notes: "Submitted with anonymous shielding enabled under UGC Anti-Ragging regulations. Student identity protected.",
+            performedBy: "Anonymous Complainant",
+            role: "Student Complainant",
+            timestamp: "2026-11-12T14:40:00Z"
+          },
+          {
+            step: "Under Review",
+            title: "Anti-Ragging Squad Briefing & CCTV Footage Requested",
+            notes: "Dr. Oviya reviewed complaint. Campus Chief Security Officer requested to secure DVR recordings for Camera 14 & 15 covering West Gate from 5:00 PM to 6:30 PM on Nov 11.",
+            performedBy: "Dr. Oviya",
+            role: "Anti-Ragging Chairperson",
+            timestamp: "2026-11-13T09:15:00Z"
+          }
+        ]
+      },
+      {
+        id: "CMP-DEMO-003",
+        complaintId: "JC-2026-3108",
+        studentId: "STU2026-01",
+        studentName: "Dharsan",
+        studentEmail: "studentskit@gmail.com",
+        studentRegisterNo: "711522CS101",
+        category: "Academic Issues",
+        title: "Continuous Assessment Test-2 Mark Sheet Discrepancy",
+        description: "In the recently published internal marks portal for CS8492 Database Management Systems, my score is recorded as 14/50 whereas the physically returned evaluated test booklet shows 44/50 verified with course instructor signature. This creates a risk of detention from lab exams.",
+        incidentDate: "2026-11-08",
+        incidentLocation: "Academic Portal & Dept of Computer Science",
+        evidenceUrl: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=600",
+        evidenceName: "signed_answer_script_frontpage.pdf",
+        isAnonymous: false,
+        priority: "Medium",
+        status: "Resolved",
+        assignedAuthority: "Academic Grievance Cell",
+        assignedOfficerName: "Dr. K. Ananthapadmanabhan",
+        isEscalated: false,
+        escalationReason: "",
+        isSampleData: true,
+        createdAt: "2026-11-09T11:20:00Z",
+        updatedAt: "2026-11-11T14:00:00Z",
+        resolvedAt: "2026-11-11T14:00:00Z",
+        resolutionNotes: "Course coordinator cross-verified the physical mark register against the ERP data entry ledger. Typographical error during data entry identified (14 instead of 44). ERP database corrected and re-synced with Controller of Examinations server. Updated score reflected on student portal.",
+        studentRating: 5,
+        studentFeedback: "Thank you for the prompt resolution within 48 hours! My internal marks have been updated correctly.",
+        timeline: [
+          {
+            step: "Submitted",
+            title: "Academic Marks Discrepancy Filed",
+            notes: "Uploaded scanned copy of validated answer booklet.",
+            performedBy: "Dharsan",
+            role: "Student Complainant",
+            timestamp: "2026-11-09T11:20:00Z"
+          },
+          {
+            step: "Under Review",
+            title: "Forwarded to Controller of Examinations",
+            notes: "Dean of Academics initiated verification with Subject Faculty Prof. R. Arumugam.",
+            performedBy: "Dr. K. Ananthapadmanabhan",
+            role: "Academic Dean",
+            timestamp: "2026-11-09T16:00:00Z"
+          },
+          {
+            step: "In Progress",
+            title: "Ledger Audit Conducted",
+            notes: "Physical script examined. Faculty confirmed typo in manual data transmission.",
+            performedBy: "Academic Grievance Board",
+            role: "Examination Cell",
+            timestamp: "2026-11-10T14:15:00Z"
+          },
+          {
+            step: "Resolved",
+            title: "ERP System Updated & Verified",
+            notes: "Score updated to 44/50. Student notified via SMS and portal alert.",
+            performedBy: "Dr. K. Ananthapadmanabhan",
+            role: "Academic Dean",
+            timestamp: "2026-11-11T14:00:00Z"
+          }
+        ]
+      },
+      {
+        id: "CMP-DEMO-004",
+        complaintId: "JC-2026-2590",
+        studentId: "STU2026-02",
+        studentName: "Kaviya",
+        studentEmail: "kaviya@justicecampus.edu",
+        studentRegisterNo: "711522AI042",
+        category: "Harassment",
+        title: "Unsolicited Inappropriate Messages and Cyber Stalking on Class Group",
+        description: "An unidentified user joining with fake credentials has been sending threatening and derogatory direct messages to female students from the department WhatsApp announcements link. Screenshots and phone numbers documented.",
+        incidentDate: "2026-11-10",
+        incidentLocation: "Department Communication Channels / Online",
+        evidenceUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=600",
+        evidenceName: "chat_transcript_evidence.png",
+        isAnonymous: false,
+        priority: "Critical",
+        status: "In Progress",
+        assignedAuthority: "Internal Complaints Committee (POSH/Women)",
+        assignedOfficerName: "Prof. Meenakshi Sundaram",
+        isEscalated: false,
+        escalationReason: "",
+        isSampleData: true,
+        createdAt: "2026-11-11T09:30:00Z",
+        updatedAt: "2026-11-12T17:45:00Z",
+        timeline: [
+          {
+            step: "Submitted",
+            title: "Formal ICC Complaint Lodged",
+            notes: "Confidential submission received under POSH / Campus Safety Guidelines.",
+            performedBy: "Kaviya",
+            role: "Student Complainant",
+            timestamp: "2026-11-11T09:30:00Z"
+          },
+          {
+            step: "Under Review",
+            title: "Internal Complaints Committee Convened",
+            notes: "Presiding officer initiated confidential inquiry with cyber cell advisor.",
+            performedBy: "Prof. Meenakshi Sundaram",
+            role: "Presiding Officer - ICC",
+            timestamp: "2026-11-11T14:00:00Z"
+          },
+          {
+            step: "In Progress",
+            title: "Cyber Cell IP Tracing & Counseling Support Assigned",
+            notes: "IT Infrastructure team cross-referenced campus Wi-Fi access logs for originating IP address. Student counselor appointed for affected parties.",
+            performedBy: "ICC Safety Committee",
+            role: "Investigation Council",
+            timestamp: "2026-11-12T17:45:00Z"
+          }
+        ]
+      },
+      {
+        id: "CMP-DEMO-005",
+        complaintId: "JC-2026-1874",
+        studentId: "STU2026-03",
+        studentName: "Jeevitha",
+        studentEmail: "jeevitha@justicecampus.edu",
+        studentRegisterNo: "711522IT033",
+        category: "Campus Facilities",
+        title: "Main Projector Blown Lamp & Non-Functional Air Handling in LH-402",
+        description: "Lecture Hall 402 projector lamp exploded during practical seminar last Friday. The room has no natural ventilation and both ceiling fans make severe grinding noise, making afternoon technical presentations inaudible and uncomfortable for 65 students.",
+        incidentDate: "2026-11-07",
+        incidentLocation: "Main Academic Block - 4th Floor - LH 402",
+        evidenceUrl: "",
+        evidenceName: "",
+        isAnonymous: false,
+        priority: "Medium",
+        status: "Resolved",
+        assignedAuthority: "Campus Facilities & Infrastructure",
+        assignedOfficerName: "Er. M. Sivakumar",
+        isEscalated: false,
+        escalationReason: "",
+        isSampleData: true,
+        createdAt: "2026-11-08T15:00:00Z",
+        updatedAt: "2026-11-10T12:30:00Z",
+        resolvedAt: "2026-11-10T12:30:00Z",
+        resolutionNotes: "New 4500-lumen EPSON laser projection system installed with HDMI-over-Ethernet switch. Both ceiling fans replaced with BLDC silent energy-efficient fans. Room acoustic check completed.",
+        studentRating: 5,
+        studentFeedback: "Super fast turnaround. The new laser projector is bright and working great for our presentations.",
+        timeline: [
+          {
+            step: "Submitted",
+            title: "Facility Maintenance Request Logged",
+            notes: "Reported issue with LH-402 audio-visual hardware.",
+            performedBy: "Jeevitha",
+            role: "Student Complainant",
+            timestamp: "2026-11-08T15:00:00Z"
+          },
+          {
+            step: "Under Review",
+            title: "Work Order Created #WO-891",
+            notes: "Estate officer approved requisition for replacement projector bulb and fan motor replacement.",
+            performedBy: "Er. M. Sivakumar",
+            role: "Campus Estate Manager",
+            timestamp: "2026-11-09T10:00:00Z"
+          },
+          {
+            step: "In Progress",
+            title: "Hardware Installation & Calibration",
+            notes: "Technician team installed new projector unit and checked cabling.",
+            performedBy: "AV Support Team",
+            role: "Technical Crew",
+            timestamp: "2026-11-10T09:30:00Z"
+          },
+          {
+            step: "Resolved",
+            title: "Completion Verified & Ticket Closed",
+            notes: "Room tested and restored for standard academic operation.",
+            performedBy: "Er. M. Sivakumar",
+            role: "Campus Estate Manager",
+            timestamp: "2026-11-10T12:30:00Z"
+          }
+        ]
+      },
+      {
+        id: "CMP-DEMO-006",
+        complaintId: "JC-2026-5120",
+        studentId: "STU2026-05",
+        studentName: "Nethra",
+        studentEmail: "nethra@justicecampus.edu",
+        studentRegisterNo: "711522EC079",
+        category: "Discrimination",
+        title: "Language Barrier and Exclusion in Technical Symposium Team Allocation",
+        description: "During the department symposium project allocation, non-local students were systematically excluded from prime project tracks by student coordinators due to language bias. Seeking fair and inclusive evaluation.",
+        incidentDate: "2026-11-14",
+        incidentLocation: "ECE Seminar Hall 2",
+        evidenceUrl: "",
+        evidenceName: "",
+        isAnonymous: false,
+        priority: "High",
+        status: "Submitted",
+        assignedAuthority: "Disciplinary & Equity Council",
+        assignedOfficerName: "Dr. Dhilipkumar (Council Chair)",
+        isEscalated: false,
+        escalationReason: "",
+        isSampleData: true,
+        createdAt: "2026-11-15T09:00:00Z",
+        updatedAt: "2026-11-15T09:00:00Z",
+        timeline: [
+          {
+            step: "Submitted",
+            title: "Equity Grievance Lodged",
+            notes: "Student filed report regarding inclusive team selection protocols.",
+            performedBy: "Nethra",
+            role: "Student Complainant",
+            timestamp: "2026-11-15T09:00:00Z"
+          }
+        ]
+      }
+    ];
+
+    const INITIAL_NOTIFICATIONS = [
+      {
+        id: "NTF-001",
+        userId: "STU2026-01",
+        complaintId: "JC-2026-8941",
+        title: "Action Update: Kaveri Hostel Water Issue",
+        message: "Alternative 20L water cans have been provided on your floor. Water test results expected today.",
+        type: "status_update",
+        isRead: false,
+        createdAt: "2026-11-14T09:05:00Z"
+      },
+      {
+        id: "NTF-002",
+        userId: "STU2026-01",
+        complaintId: "JC-2026-3108",
+        title: "Grievance Resolved: DBMS Internal Marks",
+        message: "Your CAT-2 marks have been officially corrected to 44/50. Please check your academic portal.",
+        type: "status_update",
+        isRead: true,
+        createdAt: "2026-11-11T14:02:00Z"
+      },
+      {
+        id: "NTF-003",
+        userId: "ADM2026-01",
+        complaintId: "JC-2026-8941",
+        title: "SLA Alert: Critical Complaint Exceeding 48h",
+        message: "Complaint JC-2026-8941 (Hostel Water Issue) has been flagged as Escalated to Principal.",
+        type: "escalation",
+        isRead: false,
+        createdAt: "2026-11-15T16:30:00Z"
+      },
+      {
+        id: "NTF-004",
+        userId: "ADM2026-02",
+        complaintId: "JC-2026-5120",
+        title: "New Grievance Docket Assigned: JC-2026-5120",
+        message: "Discrimination complaint regarding symposium allocation assigned to Disciplinary Council.",
+        type: "assignment",
+        isRead: false,
+        createdAt: "2026-11-15T09:05:00Z"
+      }
+    ];
+
+    // Multilingual Dictionary (English and Tamil)
+    const DICTIONARY = {
+      en: {
+        portalName: "JUSTICE CAMPUS",
+        tagline: "Your Voice, Our Responsibility.",
+        home: "Home",
+        dashboard: "Dashboard",
+        analytics: "Analytics",
+        aboutUs: "About Us",
+        login: "Sign In",
+        logout: "Sign Out",
+        submitComplaint: "Submit Grievance",
+        trackDocket: "Track Docket",
+        overview: "Overview",
+        history: "Complaint History",
+        notifications: "Notifications",
+        profile: "My Profile",
+        searchPlaceholder: "Search by Complaint ID (e.g. JC-2026-8941) or keywords...",
+        allCategories: "All Categories",
+        allStatuses: "All Statuses",
+        filter: "Filter",
+        reset: "Reset",
+        sampleBadge: "DEMO SAMPLE",
+        liveBadge: "LIVE COMPLAINT",
+        anonymous: "Anonymous Complainant",
+        statusSubmitted: "Submitted",
+        statusUnderReview: "Under Review",
+        statusInProgress: "In Progress",
+        statusResolved: "Resolved",
+        statusClosed: "Closed",
+        escalatedToPrincipal: "Escalated to Principal",
+        escalateBtn: "Escalate Delayed Complaint",
+        updateStatusBtn: "Update Status & Action Notes",
+        printDocketBtn: "Print / Save PDF Docket",
+        rateResolutionBtn: "Rate Resolution & Feedback",
+        viewTimelineBtn: "View Action Timeline",
+        contactSection: "Campus Redressal Contacts & Helplines",
+        missionTitle: "Our Mission",
+        featuresTitle: "Core Architectural Capabilities",
+        howItWorksTitle: "How Justice Campus Works",
+        categoriesTitle: "7 Statutory Grievance Categories",
+        teamTitle: "Meet Team Justice Minds",
+        langToggle: "தமிழ்"
+      },
+      ta: {
+        portalName: "ஜஸ்டிஸ் கேம்பஸ்",
+        tagline: "உங்கள் குரல், எங்கள் பொறுப்பு.",
+        home: "முகப்பு",
+        dashboard: "குறைதீர்ப்பு பலகை",
+        analytics: "புள்ளிவிவரம்",
+        aboutUs: "எங்களை பற்றி",
+        login: "உள்நுழைக",
+        logout: "வெளியேறு",
+        submitComplaint: "புகார் பதிவு செய்க",
+        trackDocket: "புகார் கண்காணிப்பு",
+        overview: "மேலோட்டம்",
+        history: "புகார் வரலாறு",
+        notifications: "அறிவிப்புகள்",
+        profile: "சுயவிவரம்",
+        searchPlaceholder: "புகார் எண் (JC-2026-...) அல்லது சொற்களால் தேடுக...",
+        allCategories: "அனைத்து பிரிவுகள்",
+        allStatuses: "அனைத்து நிலைகள்",
+        filter: "வடிகட்டு",
+        reset: "மீட்டமை",
+        sampleBadge: "மாதிரி தரவு",
+        liveBadge: "நேரடி புகார்",
+        anonymous: "அடையாளம் மறைக்கப்பட்ட மாணவர்",
+        statusSubmitted: "பதிவு செய்யப்பட்டது",
+        statusUnderReview: "பரிசீலனையில்",
+        statusInProgress: "நடவடிக்கையில்",
+        statusResolved: "தீர்வு காணப்பட்டது",
+        statusClosed: "முடிவுற்றது",
+        escalatedToPrincipal: "முதல்வருக்கு தீவிரப்படுத்தப்பட்டது",
+        escalateBtn: "தாமதமான புகாரை தீவிரப்படுத்துக",
+        updateStatusBtn: "நிலையை மாற்றி குறிப்பு சேர்க்க",
+        printDocketBtn: "PDF ஆவணத்தை அச்சிடுக",
+        rateResolutionBtn: "மதிப்பீடு மற்றும் கருத்து",
+        viewTimelineBtn: "நடவடிக்கை காலவரிசை",
+        contactSection: "கல்லூரி தொடர்பு மற்றும் அவசர எண்கள்",
+        missionTitle: "எங்கள் நோக்கம்",
+        featuresTitle: "முக்கிய சிறப்பம்சங்கள்",
+        howItWorksTitle: "செயல்படும் முறை",
+        categoriesTitle: "7 சட்டரீதியான புகார் பிரிவுகள்",
+        teamTitle: "டீம் ஜஸ்டிஸ் மைண்ட்ஸ்",
+        langToggle: "English"
+      }
+    };
+
+    // AI Categorizer and Urgency Analyzer
+    function analyzeComplaintText(title, description) {
+      const text = `${title} ${description}`.toLowerCase();
+
+      if (text.includes("ragging") || text.includes("bully") || text.includes("senior") || text.includes("intimida") || text.includes("money") || text.includes("threat") || text.includes("beat")) {
+        return {
+          category: "Bullying",
+          priority: "High",
+          authority: "Anti-Ragging Committee",
+          confidence: 96,
+          reason: "Detected patterns of peer intimidation and senior dominance violating UGC anti-ragging mandates."
+        };
+      }
+      if (text.includes("harass") || text.includes("sexual") || text.includes("stalk") || text.includes("messages") || text.includes("photo") || text.includes("touch") || text.includes("whatsapp")) {
+        return {
+          category: "Harassment",
+          priority: "Critical",
+          authority: "Internal Complaints Committee (POSH/Women)",
+          confidence: 98,
+          reason: "Critical safety keywords identified under POSH Act guidelines. Immediate confidential review recommended."
+        };
+      }
+      if (text.includes("discrim") || text.includes("caste") || text.includes("language") || text.includes("religion") || text.includes("tamil") || text.includes("hindi") || text.includes("region") || text.includes("bias")) {
+        return {
+          category: "Discrimination",
+          priority: "High",
+          authority: "Disciplinary & Equity Council",
+          confidence: 92,
+          reason: "Identified indicators of exclusionary treatment or language/background bias."
+        };
+      }
+      if (text.includes("mark") || text.includes("internal") || text.includes("exam") || text.includes("cat") || text.includes("attendance") || text.includes("faculty") || text.includes("grade") || text.includes("detention")) {
+        return {
+          category: "Academic Issues",
+          priority: "Medium",
+          authority: "Academic Grievance Cell",
+          confidence: 94,
+          reason: "Examination marks discrepancies and attendance audit keywords matched."
+        };
+      }
+      if (text.includes("hostel") || text.includes("mess") || text.includes("food") || text.includes("water") || text.includes("warden") || text.includes("room") || text.includes("stomach") || text.includes("cleaning")) {
+        return {
+          category: "Hostel Issues",
+          priority: "High",
+          authority: "Hostel Administration & Welfare",
+          confidence: 95,
+          reason: "Hostel living conditions, drinking water safety, or mess hygiene issues detected."
+        };
+      }
+      if (text.includes("projector") || text.includes("fan") || text.includes("ac") || text.includes("toilet") || text.includes("lab") || text.includes("bus") || text.includes("wifi") || text.includes("light") || text.includes("bench")) {
+        return {
+          category: "Campus Facilities",
+          priority: "Medium",
+          authority: "Campus Facilities & Infrastructure",
+          confidence: 90,
+          reason: "Classroom audio-visuals, physical infrastructure, or transport amenity concerns."
+        };
+      }
+      return {
+        category: "Other Issues",
+        priority: "Medium",
+        authority: "Deanery of Student Affairs",
+        confidence: 70,
+        reason: "General campus grievance requiring standard administrative verification."
+      };
+    }
+
+    // Audio chime using Web Audio API
+    function playPortalSound(type = 'success') {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'success') {
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+          osc.frequency.exponentialRampToValueAtTime(659.25, ctx.currentTime + 0.15); // E5
+          gain.gain.setValueAtTime(0.12, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+        } else if (type === 'alert') {
+          osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+          osc.frequency.setValueAtTime(440, ctx.currentTime + 0.12);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        }
+      } catch (e) {}
+    }
+
+    // Helper: Print / Save Docket to PDF
+    function printGrievanceDocket(c) {
+      const w = window.open('', '_blank');
+      if (!w) {
+        alert('Please allow popups to preview and print the official Grievance Docket.');
+        return;
+      }
+
+      const timelineHtml = (c.timeline || []).map((t, idx) => `
+        <div style="margin-bottom:12px; padding-left:14px; border-left:3px solid #0284c7; position:relative;">
+          <div style="font-weight:700; font-size:12px; color:#0f172a;">${idx + 1}. [${t.step.toUpperCase()}] ${t.title}</div>
+          <div style="font-size:11px; color:#334155; margin-top:2px;">${t.notes}</div>
+          <div style="font-size:10px; color:#64748b; margin-top:3px;">Timestamp: ${new Date(t.timestamp).toLocaleString()} | Action Authority: <strong>${t.performedBy}</strong> (${t.role})</div>
+        </div>
+      `).join('');
+
+      w.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Grievance Docket - ${c.complaintId}</title>
+          <style>
+            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 30px; color: #0f172a; line-height: 1.4; font-size: 12px; }
+            .header { border-bottom: 3px solid #0b192c; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: flex-start; }
+            .docket-box { background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+            .badge { display: inline-block; padding: 4px 10px; border-radius: 9999px; font-weight: 700; font-size: 11px; }
+            .badge-res { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+            .badge-prog { background: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; }
+            .badge-esc { background: #ffe4e6; color: #9f1239; border: 1px solid #fecdd3; }
+            .print-btn { background: #0284c7; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+            @media print { .no-print { display: none; } body { padding: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="no-print" style="text-align:right; margin-bottom:14px;">
+            <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+          </div>
+          
+          <div class="header">
+            <div>
+              <h1 style="margin:0; font-size:22px; color:#0b192c; letter-spacing:-0.5px;">JUSTICE CAMPUS</h1>
+              <div style="font-size:11px; font-weight:bold; color:#0284c7;">A Safe & Transparent Student Grievance Redressal Portal</div>
+              <div style="font-size:10px; color:#64748b;">Statutory Redressal Mechanism • Team Justice Minds</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:16px; font-weight:800; color:#0b192c;">${c.complaintId}</div>
+              <div style="font-size:10px; color:#64748b;">Lodged on: ${new Date(c.createdAt).toLocaleDateString()}</div>
+              <span class="badge ${c.isEscalated ? 'badge-esc' : (c.status === 'Resolved' || c.status === 'Closed' ? 'badge-res' : 'badge-prog')}">
+                STATUS: ${c.status.toUpperCase()} ${c.isEscalated ? '(ESCALATED)' : ''}
+              </span>
+            </div>
+          </div>
+
+          <div class="docket-box">
+            <h4 style="margin:0 0 8px 0; color:#0284c7; font-size:13px; text-transform:uppercase;">1. Complainant Identification & Jurisdiction</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+              <div><strong>Complainant:</strong> ${c.isAnonymous ? 'CONFIDENTIAL (ANONYMOUS STUDENT SHIELDED)' : `${c.studentName} (${c.studentRegisterNo})`}</div>
+              <div><strong>Category:</strong> ${c.category} (${c.priority} Priority)</div>
+              <div><strong>Institutional Email:</strong> ${c.isAnonymous ? 'Concealed by System' : c.studentEmail}</div>
+              <div><strong>Assigned Redressal Body:</strong> ${c.assignedAuthority}</div>
+              <div><strong>Incident Date:</strong> ${c.incidentDate}</div>
+              <div><strong>Incident Location:</strong> ${c.incidentLocation}</div>
+            </div>
+          </div>
+
+          <div class="docket-box">
+            <h4 style="margin:0 0 6px 0; color:#0284c7; font-size:13px; text-transform:uppercase;">2. Grievance Statement & Documented Facts</h4>
+            <div style="font-size:13px; font-weight:bold; color:#0f172a; margin-bottom:6px;">${c.title}</div>
+            <div style="white-space:pre-wrap; line-height:1.5;">${c.description}</div>
+            ${c.evidenceName ? `<div style="margin-top:8px; font-weight:bold; color:#0284c7;">Attached Documentary Evidence: ${c.evidenceName}</div>` : ''}
+          </div>
+
+          ${c.resolutionNotes ? `
+          <div class="docket-box" style="background:#f0fdf4; border-color:#86efac;">
+            <h4 style="margin:0 0 6px 0; color:#166534; font-size:13px; text-transform:uppercase;">3. Certified Resolution & Authority Actions</h4>
+            <div style="line-height:1.5; color:#14532d;">${c.resolutionNotes}</div>
+            ${c.studentRating ? `<div style="margin-top:6px; font-weight:bold; color:#15803d;">Student Satisfaction: ${'⭐'.repeat(c.studentRating)} (${c.studentRating}/5 Stars) — "${c.studentFeedback || 'Satisfied'}"</div>` : ''}
+          </div>
+          ` : ''}
+
+          <div class="docket-box">
+            <h4 style="margin:0 0 10px 0; color:#0284c7; font-size:13px; text-transform:uppercase;">4. Certified Action Audit Trail</h4>
+            ${timelineHtml}
+          </div>
+
+          <div style="border-top:1px solid #cbd5e1; padding-top:12px; margin-top:20px; font-size:10px; color:#64748b; display:flex; justify-content:space-between;">
+            <div>Digitally Certified Docket • Justice Campus • Team Justice Minds (Oviya K, Dhilipkumar N B, Anbu S, Vaishnavi D)</div>
+            <div>VERIFIED: ${new Date().toUTCString()}</div>
+          </div>
+        </body>
+        </html>
+      `);
+      w.document.close();
+    }
+
+
+    // ====================================================================
+    // MAIN APP COMPONENT
+    // ====================================================================
+    function JusticeCampusApp() {
+      const [lang, setLang] = useState('en');
+      const t = DICTIONARY[lang];
+
+      // Navigation: 'landing', 'student-dashboard', 'admin-dashboard', 'analytics', 'about'
+      const [view, setView] = useState('landing');
+      
+      // Sidebar Active Sub-tab
+      const [sidebarTab, setSidebarTab] = useState('overview'); // 'overview', 'all', 'pending', 'resolved', 'escalated', 'submit'
+      const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
+
+      // Persistent Storage
+      const [users, setUsers] = useState(() => {
+        const s = localStorage.getItem('jc_users_v2');
+        return s ? JSON.parse(s) : INITIAL_USERS;
+      });
+
+      // Default Active User: Dharsan (Student)
+      const [currentUser, setCurrentUser] = useState(() => {
+        const s = localStorage.getItem('jc_current_user_v2');
+        return s ? JSON.parse(s) : users[0];
+      });
+
+      const [complaints, setComplaints] = useState(() => {
+        const s = localStorage.getItem('jc_complaints_v2');
+        return s ? JSON.parse(s) : INITIAL_COMPLAINTS;
+      });
+
+      const [notifications, setNotifications] = useState(() => {
+        const s = localStorage.getItem('jc_notifs_v2');
+        return s ? JSON.parse(s) : INITIAL_NOTIFICATIONS;
+      });
+
+      // UI Modals
+      const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+      const [authModalTab, setAuthModalTab] = useState('student'); // 'student', 'admin', 'register'
+      const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+      const [activeDetailsComplaint, setActiveDetailsComplaint] = useState(null);
+      const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
+      const [toastMsg, setToastMsg] = useState(null);
+
+      // Search & Filters
+      const [searchQuery, setSearchQuery] = useState('');
+      const [filterCategory, setFilterCategory] = useState('All');
+      const [filterStatus, setFilterStatus] = useState('All');
+      const [filterPriority, setFilterPriority] = useState('All');
+
+      // Sync with localStorage
+      useEffect(() => { localStorage.setItem('jc_users_v2', JSON.stringify(users)); }, [users]);
+      useEffect(() => { localStorage.setItem('jc_complaints_v2', JSON.stringify(complaints)); }, [complaints]);
+      useEffect(() => { localStorage.setItem('jc_notifs_v2', JSON.stringify(notifications)); }, [notifications]);
+      useEffect(() => { localStorage.setItem('jc_current_user_v2', JSON.stringify(currentUser)); }, [currentUser]);
+
+      const isAdmin = currentUser?.role === 'admin';
+
+      // Toast notification helper
+      const showToast = (message) => {
+        setToastMsg(message);
+        setTimeout(() => setToastMsg(null), 4000);
+      };
+
+      // Unread notifications for current user
+      const userNotifications = useMemo(() => {
+        return notifications.filter(n => {
+          if (!currentUser) return false;
+          if (currentUser.role === 'admin') return true;
+          return n.userId === currentUser.userId;
+        });
+      }, [notifications, currentUser]);
+
+      const unreadCount = userNotifications.filter(n => !n.isRead).length;
+
+      // Handle Switch User (e.g., Quick Switcher in header or modal)
+      const handleSwitchUser = (selectedUser) => {
+        setCurrentUser(selectedUser);
+        if (selectedUser.role === 'admin') {
+          setView('admin-dashboard');
+        } else {
+          setView('student-dashboard');
+        }
+        setSidebarTab('overview');
+        showToast(`Signed in as ${selectedUser.fullName} (${selectedUser.role === 'admin' ? 'Admin Authority' : 'Verified Student'})`);
+        setIsAuthModalOpen(false);
+        playPortalSound('success');
+      };
+
+      // Handle Submit New Complaint
+      const handleCreateComplaint = (complaintData) => {
+        const randId = Math.floor(1000 + Math.random() * 9000);
+        const complaintId = `JC-2026-${randId}`;
+
+        const authorityMap = {
+          'Bullying': 'Anti-Ragging Committee',
+          'Harassment': 'Internal Complaints Committee (POSH/Women)',
+          'Discrimination': 'Disciplinary & Equity Council',
+          'Academic Issues': 'Academic Grievance Cell',
+          'Hostel Issues': 'Hostel Administration & Welfare',
+          'Campus Facilities': 'Campus Facilities & Infrastructure',
+          'Other Issues': 'Deanery of Student Affairs'
+        };
+        const assignedAuthority = authorityMap[complaintData.category] || 'Deanery of Student Affairs';
+
+        const newDocket = {
+          id: `CMP-LIVE-${Date.now()}`,
+          complaintId,
+          ...complaintData,
+          status: 'Submitted',
+          assignedAuthority,
+          assignedOfficerName: 'Designated Committee Officer',
+          isEscalated: false,
+          escalationReason: '',
+          isSampleData: false, // Distinguish real session complaints from demo data
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          timeline: [
+            {
+              step: 'Submitted',
+              title: 'Grievance Docket Registered',
+              notes: complaintData.isAnonymous ? 'Lodged under UGC anonymous student protection regulations.' : 'Complaint registered via student dashboard.',
+              performedBy: complaintData.isAnonymous ? 'Anonymous Student' : complaintData.studentName,
+              role: 'Student Complainant',
+              timestamp: new Date().toISOString()
+            },
+            {
+              step: 'Under Review',
+              title: `AI Triage & Routed to ${assignedAuthority}`,
+              notes: `Automated assessment assigned docket to ${assignedAuthority} with ${complaintData.priority} Priority.`,
+              performedBy: 'Justice Campus AI Triage',
+              role: 'Automated Routing Engine',
+              timestamp: new Date().toISOString()
+            }
+          ]
+        };
+
+        setComplaints(prev => [newDocket, ...prev]);
+
+        // Notifications
+        const newNotifs = [
+          {
+            id: `NTF-${Date.now()}-1`,
+            userId: complaintData.studentId,
+            complaintId,
+            title: `Grievance Docket Generated: ${complaintId}`,
+            message: `Your complaint in "${complaintData.category}" has been assigned to ${assignedAuthority}.`,
+            type: 'status_update',
+            isRead: false,
+            createdAt: new Date().toISOString()
+          },
+          {
+            id: `NTF-${Date.now()}-2`,
+            userId: 'ADM2026-01',
+            complaintId,
+            title: `New Grievance Docket: ${complaintId}`,
+            message: `New docket filed: "${complaintData.title}" (${complaintData.priority} Priority).`,
+            type: 'alert',
+            isRead: false,
+            createdAt: new Date().toISOString()
+          }
+        ];
+        setNotifications(prev => [...newNotifs, ...prev]);
+
+        playPortalSound('success');
+        showToast(`✓ Complaint ${complaintId} generated and securely routed!`);
+        setIsSubmitModalOpen(false);
+        setView('student-dashboard');
+        setSidebarTab('overview');
+      };
+
+      // Handle Admin Update Status
+      const handleUpdateComplaintStatus = (cid, newStatus, actionTitle, actionNotes) => {
+        setComplaints(prev => prev.map(c => {
+          if (c.complaintId === cid) {
+            const isResolved = newStatus === 'Resolved' || newStatus === 'Closed';
+            return {
+              ...c,
+              status: newStatus,
+              updatedAt: new Date().toISOString(),
+              resolvedAt: isResolved ? new Date().toISOString() : c.resolvedAt,
+              resolutionNotes: isResolved ? (actionNotes || c.resolutionNotes) : c.resolutionNotes,
+              timeline: [
+                ...(c.timeline || []),
+                {
+                  step: newStatus,
+                  title: actionTitle || `Status Advanced: ${newStatus}`,
+                  notes: actionNotes || `Action logged and verified by ${currentUser?.fullName || 'Committee Authority'}.`,
+                  performedBy: currentUser?.fullName || 'Dr. Oviya',
+                  role: currentUser?.designation || 'Disciplinary Board',
+                  timestamp: new Date().toISOString()
+                }
+              ]
+            };
+          }
+          return c;
+        }));
+
+        // Send alert notification to student
+        setNotifications(prev => [
+          {
+            id: `NTF-${Date.now()}`,
+            userId: complaints.find(c => c.complaintId === cid)?.studentId || 'STU2026-01',
+            complaintId: cid,
+            title: `Docket Update: ${cid}`,
+            message: `Your grievance has advanced to "${newStatus}". Remarks: ${actionNotes || 'Action taken.'}`,
+            type: 'status_update',
+            isRead: false,
+            createdAt: new Date().toISOString()
+          },
+          ...prev
+        ]);
+
+        playPortalSound('success');
+        showToast(`✓ Docket ${cid} status updated to ${newStatus}`);
+      };
+
+      // Handle Escalate Delayed Complaint
+      const handleEscalateComplaint = (cid, reason) => {
+        setComplaints(prev => prev.map(c => {
+          if (c.complaintId === cid) {
+            return {
+              ...c,
+              isEscalated: true,
+              escalationReason: reason || 'Resolution pending beyond 48 hours for critical student concern.',
+              priority: 'Critical',
+              updatedAt: new Date().toISOString(),
+              timeline: [
+                ...(c.timeline || []),
+                {
+                  step: c.status,
+                  title: '⚠️ Formal Escalation to Principal',
+                  notes: `Case escalated directly to Principal Bench. Reason: ${reason || 'Statutory SLA overdue.'}`,
+                  performedBy: currentUser?.fullName ? `${currentUser.fullName} (Admin)` : 'SLA Escalation Watchdog',
+                  role: 'Principal Appellate Cell',
+                  timestamp: new Date().toISOString()
+                }
+              ]
+            };
+          }
+          return c;
+        }));
+
+        setNotifications(prev => [
+          {
+            id: `NTF-${Date.now()}-ESC`,
+            userId: 'ADM2026-01',
+            complaintId: cid,
+            title: `🚨 Docket Escalated to Principal: ${cid}`,
+            message: `Reason: ${reason || 'Delayed resolution beyond SLA limit.'}`,
+            type: 'escalation',
+            isRead: false,
+            createdAt: new Date().toISOString()
+          },
+          ...prev
+        ]);
+
+        playPortalSound('alert');
+        showToast(`⚠️ Complaint ${cid} escalated to Principal for immediate hearing!`);
+      };
+
+      // Handle Student Feedback / Resolution Rating
+      const handleStudentFeedback = (cid, rating, comment) => {
+        setComplaints(prev => prev.map(c => {
+          if (c.complaintId === cid) {
+            return {
+              ...c,
+              status: 'Closed',
+              studentRating: rating,
+              studentFeedback: comment,
+              updatedAt: new Date().toISOString(),
+              timeline: [
+                ...(c.timeline || []),
+                {
+                  step: 'Closed',
+                  title: 'Docket Closed with Complainant Feedback',
+                  notes: `Student rated resolution: ${rating}/5 stars. Feedback: "${comment || 'Verified and satisfied.'}"`,
+                  performedBy: c.isAnonymous ? 'Anonymous Student' : c.studentName,
+                  role: 'Student Complainant',
+                  timestamp: new Date().toISOString()
+                }
+              ]
+            };
+          }
+          return c;
+        }));
+
+        playPortalSound('success');
+        showToast(`✓ Thank you for your feedback! Docket ${cid} has been closed.`);
+      };
+
+      // Handle Student Registration
+      const handleRegisterStudent = (newStudentData) => {
+        const newStu = {
+          userId: `STU2026-${String(users.length + 1).padStart(2, '0')}`,
+          role: 'student',
+          avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
+          ...newStudentData
+        };
+        setUsers(prev => [...prev, newStu]);
+        setCurrentUser(newStu);
+        setView('student-dashboard');
+        setIsAuthModalOpen(false);
+        showToast(`Welcome to Justice Campus, ${newStu.fullName}! Account created.`);
+        playPortalSound('success');
+      };
+
+      // Filtered Complaints List
+      const displayedComplaints = useMemo(() => {
+        let list = [...complaints];
+
+        // Role-based Access: Students only see their own complaints
+        if (!isAdmin) {
+          list = list.filter(c => c.studentId === currentUser?.userId);
+        }
+
+        // Sub-tab filtering in Sidebar
+        if (sidebarTab === 'pending') {
+          list = list.filter(c => c.status === 'Submitted' || c.status === 'Under Review');
+        } else if (sidebarTab === 'in-progress') {
+          list = list.filter(c => c.status === 'In Progress');
+        } else if (sidebarTab === 'resolved') {
+          list = list.filter(c => c.status === 'Resolved' || c.status === 'Closed');
+        } else if (sidebarTab === 'escalated') {
+          list = list.filter(c => c.isEscalated);
+        }
+
+        // Search by Complaint ID or Keywords
+        if (searchQuery.trim()) {
+          const q = searchQuery.toLowerCase().trim();
+          list = list.filter(c =>
+            c.complaintId.toLowerCase().includes(q) ||
+            c.title.toLowerCase().includes(q) ||
+            c.category.toLowerCase().includes(q) ||
+            (c.studentName && c.studentName.toLowerCase().includes(q)) ||
+            (c.studentRegisterNo && c.studentRegisterNo.toLowerCase().includes(q))
+          );
+        }
+
+        // Dropdown Filters
+        if (filterCategory !== 'All') {
+          list = list.filter(c => c.category === filterCategory);
+        }
+        if (filterStatus !== 'All') {
+          list = list.filter(c => c.status === filterStatus);
+        }
+        if (filterPriority !== 'All') {
+          list = list.filter(c => c.priority === filterPriority);
+        }
+
+        return list;
+      }, [complaints, currentUser, isAdmin, sidebarTab, searchQuery, filterCategory, filterStatus, filterPriority]);
+
+      // Metrics for current perspective
+      const metrics = useMemo(() => {
+        const pool = isAdmin ? complaints : complaints.filter(c => c.studentId === currentUser?.userId);
+        const total = pool.length;
+        const submitted = pool.filter(c => c.status === 'Submitted').length;
+        const underReview = pool.filter(c => c.status === 'Under Review').length;
+        const inProgress = pool.filter(c => c.status === 'In Progress').length;
+        const resolved = pool.filter(c => c.status === 'Resolved').length;
+        const closed = pool.filter(c => c.status === 'Closed').length;
+        const escalated = pool.filter(c => c.isEscalated).length;
+        const resolvedTotal = resolved + closed;
+        const resolutionRate = total > 0 ? Math.round((resolvedTotal / total) * 100) : 0;
+
+        return { total, submitted, underReview, inProgress, resolved, closed, escalated, resolvedTotal, resolutionRate };
+      }, [complaints, currentUser, isAdmin]);
+
+      return (
+        <div className="min-h-screen flex flex-col bg-navy-950 text-slate-100">
+
+          {/* Interactive Floating Toast */}
+          {toastMsg && (
+            <div className="fixed bottom-6 right-6 z-50 bg-navy-900 border-2 border-sky-400 text-sky-200 px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 text-sm animate-bounce">
+              <span className="text-xl">🔔</span>
+              <span className="font-bold">{toastMsg}</span>
+            </div>
+          )}
+
+          {/* Top Universal Header */}
+          <header className="sticky top-0 z-40 bg-navy-950/95 backdrop-blur-md border-b border-slate-800 shadow-xl">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-20">
+
+                {/* Left: Brand Identity */}
+                <div onClick={() => { setView('landing'); }} className="flex items-center space-x-3.5 cursor-pointer group">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-500 via-blue-600 to-indigo-700 flex items-center justify-center text-2xl shadow-lg shadow-sky-500/20 group-hover:scale-105 transition-all">
+                    ⚖️
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="font-black text-xl sm:text-2xl tracking-tight bg-gradient-to-r from-white via-sky-200 to-sky-400 bg-clip-text text-transparent">
+                        {t.portalName}
+                      </span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                        Safe & Transparent
+                      </span>
+                    </div>
+                    <p className="text-xs text-sky-300/80 font-medium hidden sm:block">
+                      {t.tagline}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Center Navigation Links */}
+                <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+                  <button
+                    onClick={() => setView('landing')}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${view === 'landing' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/60'}`}
+                  >
+                    {t.home}
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (isAdmin) setView('admin-dashboard');
+                      else setView('student-dashboard');
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${view === 'student-dashboard' || view === 'admin-dashboard' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/60'}`}
+                  >
+                    {isAdmin ? '🛡️ Admin Console' : '🎓 Student Portal'}
+                  </button>
+                  <button
+                    onClick={() => setView('analytics')}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${view === 'analytics' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/60'}`}
+                  >
+                    📊 {t.analytics}
+                  </button>
+                  <button
+                    onClick={() => setView('about')}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${view === 'about' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'text-slate-300 hover:text-white hover:bg-slate-800/60'}`}
+                  >
+                    👥 {t.aboutUs}
+                  </button>
+                </nav>
+
+                {/* Right: Quick Demo Switcher, Language Toggle, Notification Bell, User Pill */}
+                <div className="flex items-center space-x-2 sm:space-x-3">
+
+                  {/* 1-Click Role Switcher for Hackathon Judges */}
+                  <div className="hidden lg:flex items-center bg-navy-900 p-1 rounded-xl border border-slate-700 text-xs">
+                    <button
+                      onClick={() => handleSwitchUser(users[0])}
+                      className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center space-x-1.5 ${!isAdmin ? 'bg-sky-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                      title="Switch to Student (Dharsan)"
+                    >
+                      <span>🎓</span>
+                      <span>Student (Dharsan)</span>
+                    </button>
+                    <button
+                      onClick={() => handleSwitchUser(users[5])}
+                      className={`px-2.5 py-1 rounded-lg font-bold transition-all flex items-center space-x-1.5 ${isAdmin ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                      title="Switch to Admin (Dr. Oviya)"
+                    >
+                      <span>🛡️</span>
+                      <span>Admin (Oviya)</span>
+                    </button>
+                  </div>
+
+                  {/* Language Toggle (English / Tamil) */}
+                  <button
+                    onClick={() => {
+                      const nextL = lang === 'en' ? 'ta' : 'en';
+                      setLang(nextL);
+                      showToast(`Language changed to ${nextL === 'en' ? 'English' : 'தமிழ்'}`);
+                    }}
+                    className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-navy-900 border border-slate-700 text-sky-300 hover:bg-slate-800 transition-all flex items-center space-x-1.5 shadow-sm"
+                    title="Toggle Language / மொழி மாற்றம்"
+                  >
+                    <span>🌐</span>
+                    <span>{t.langToggle}</span>
+                  </button>
+
+                  {/* Notification Bell */}
+                  <button
+                    onClick={() => setIsNotificationDrawerOpen(true)}
+                    className="relative p-2.5 rounded-xl bg-navy-900 border border-slate-700 hover:bg-slate-800 text-slate-200 transition-all"
+                    title="View Notifications"
+                  >
+                    <span className="text-base">🔔</span>
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
+                        {unreadCount}
+                      </span>
+                    )}
+                  </button>
+
+                  {/* Sign In / User Profile Button */}
+                  {currentUser ? (
+                    <button
+                      onClick={() => setIsAuthModalOpen(true)}
+                      className="flex items-center space-x-2 pl-2 pr-3 py-1.5 rounded-xl bg-navy-900 border border-slate-700 hover:border-sky-500 transition-all text-xs font-bold text-slate-200"
+                    >
+                      <img src={currentUser.avatar} alt={currentUser.fullName} className="w-6 h-6 rounded-full object-cover border border-sky-400" />
+                      <span className="max-w-[80px] sm:max-w-none truncate">{currentUser.fullName}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-sky-300 font-normal">
+                        {isAdmin ? 'Admin' : 'Student'}
+                      </span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => { setIsAuthModalOpen(true); setAuthModalTab('student'); }}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500 hover:bg-sky-400 text-white shadow-lg shadow-sky-500/25 transition-all"
+                    >
+                      {t.login}
+                    </button>
+                  )}
+
+                  {/* Submit Grievance Header CTA */}
+                  {!isAdmin && (
+                    <button
+                      onClick={() => setIsSubmitModalOpen(true)}
+                      className="hidden sm:flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-lg shadow-sky-500/25 transition-all"
+                    >
+                      <span>➕</span>
+                      <span>{t.submitComplaint}</span>
+                    </button>
+                  )}
+
+                  {/* Mobile Sidebar Toggle Button */}
+                  {(view === 'student-dashboard' || view === 'admin-dashboard') && (
+                    <button
+                      onClick={() => setIsMobileSidebarOpen(prev => !prev)}
+                      className="md:hidden p-2.5 rounded-xl bg-navy-900 border border-slate-700 text-slate-300"
+                      title="Toggle Sidebar"
+                    >
+                      ☰
+                    </button>
+                  )}
+
+                </div>
+
+              </div>
+            </div>
+          </header>
+
+          {/* MAIN APPLICATION ROUTING BODY */}
+          <div className="flex-1 flex flex-col">
+
+            {/* ------------------------------------------------------------- */}
+            {/* 1. LANDING PAGE VIEW */}
+            {/* ------------------------------------------------------------- */}
+            {view === 'landing' && (
+              <div className="space-y-20 pb-24">
+
+                {/* Hero Section */}
+                <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 text-center px-4">
+                  <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-navy-900 border border-sky-500/30 text-sky-300 text-xs font-semibold mb-6 shadow-xl">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span>UGC & AICTE Mandated Digital Grievance Management Mechanism</span>
+                  </div>
+
+                  <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white max-w-5xl mx-auto leading-tight tracking-tight">
+                    JUSTICE CAMPUS
+                    <span className="block text-2xl sm:text-4xl lg:text-5xl font-extrabold mt-3 bg-gradient-to-r from-sky-400 via-blue-300 to-indigo-300 bg-clip-text text-transparent">
+                      {t.tagline}
+                    </span>
+                  </h1>
+
+                  <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-3xl mx-auto leading-relaxed">
+                    {lang === 'en'
+                      ? 'A modern digital grievance management platform designed for colleges. Report campus-related problems safely, preserve strict confidentiality or anonymous reporting, and monitor transparent, timestamped actions taken by college authorities.'
+                      : 'கல்லூரிகளுக்கான நவீன டிஜிட்டல் குறைதீர்க்கும் தளம். வளாகப் பிரச்சனைகளைப் பாதுகாப்பாகப் பதிவுசெய்து, முழுமையான ரகசியத்தன்மையுடன் அதிகாரிகளின் வெளிப்படையான நடவடிக்கைகளைக் கண்காணிக்கவும்.'}
+                  </p>
+
+                  <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
+                    <button
+                      onClick={() => {
+                        if (isAdmin) {
+                          handleSwitchUser(users[0]); // switch to student Dharsan
+                        }
+                        setIsSubmitModalOpen(true);
+                      }}
+                      className="px-8 py-4 rounded-2xl text-base font-bold bg-gradient-to-r from-sky-500 via-blue-600 to-indigo-600 hover:scale-105 text-white shadow-xl shadow-sky-500/30 transition-all flex items-center space-x-2"
+                    >
+                      <span>📢</span>
+                      <span>{t.submitComplaint}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (isAdmin) setView('admin-dashboard');
+                        else setView('student-dashboard');
+                      }}
+                      className="px-8 py-4 rounded-2xl text-base font-bold bg-navy-900 hover:bg-slate-800 border border-slate-700 text-white shadow-lg transition-all flex items-center space-x-2"
+                    >
+                      <span>🔍</span>
+                      <span>{t.trackDocket}</span>
+                    </button>
+                  </div>
+
+                  {/* Fast Demonstration Switcher for Evaluators / Hackathon Judges */}
+                  <div className="mt-12 max-w-2xl mx-auto p-4 rounded-2xl bg-navy-900/90 border border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4 text-left shadow-2xl">
+                    <div>
+                      <span className="text-xs font-bold text-sky-400 uppercase tracking-wider block">🎓 Hackathon Jury Quick Evaluation</span>
+                      <span className="text-xs text-slate-300">Click to switch roles instantly with pre-seeded sample data:</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleSwitchUser(users[0])}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40 hover:bg-sky-500 hover:text-white transition-all flex items-center space-x-1"
+                      >
+                        <span>🎓</span>
+                        <span>Student (Dharsan)</span>
+                      </button>
+                      <button
+                        onClick={() => handleSwitchUser(users[5])}
+                        className="px-3.5 py-2 rounded-xl text-xs font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40 hover:bg-indigo-600 hover:text-white transition-all flex items-center space-x-1"
+                      >
+                        <span>🛡️</span>
+                        <span>Admin (Dr. Oviya)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Highlights Grid */}
+                  <div className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+                    <div className="p-5 rounded-2xl bg-navy-900 border border-slate-800">
+                      <div className="text-3xl font-black text-sky-400">100%</div>
+                      <div className="text-xs text-slate-400 mt-1 font-medium">Confidential / Anonymous Protection</div>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-navy-900 border border-slate-800">
+                      <div className="text-3xl font-black text-emerald-400">&lt; 48 Hrs</div>
+                      <div className="text-xs text-slate-400 mt-1 font-medium">SLA First Response Guarantee</div>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-navy-900 border border-slate-800">
+                      <div className="text-3xl font-black text-indigo-400">5-Stage</div>
+                      <div className="text-xs text-slate-400 mt-1 font-medium">Transparent Action Timeline</div>
+                    </div>
+                    <div className="p-5 rounded-2xl bg-navy-900 border border-slate-800">
+                      <div className="text-3xl font-black text-amber-400">Zero</div>
+                      <div className="text-xs text-slate-400 mt-1 font-medium">Tolerance for Ragging & Harassment</div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* About the Project & Our Mission */}
+                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="p-8 sm:p-10 rounded-3xl bg-navy-900 border border-slate-800 shadow-xl">
+                      <div className="text-3xl mb-4">🏛️</div>
+                      <h2 className="text-2xl font-bold text-white mb-3">About the Project</h2>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        <strong>Justice Campus</strong> is an institutional-grade digital grievance redressal portal engineered to bridge trust between students and collegiate authorities. By replacing paper-based complaints with cryptographically sealed dockets, Justice Campus ensures that every campus concern—from hostel hygiene and internal marks to bullying and harassment—is addressed rapidly and impartially.
+                      </p>
+                      <div className="mt-5 space-y-2 text-xs text-slate-300">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-emerald-400 font-bold">✓</span>
+                          <span>Complete protection against peer pressure through voluntary anonymous mode.</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-emerald-400 font-bold">✓</span>
+                          <span>Direct routing to statutory bodies (Anti-Ragging, POSH/ICC, Deanery, Facilities).</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-emerald-400 font-bold">✓</span>
+                          <span>Audit trail certifying every inspection, action taken, and resolution note.</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-8 sm:p-10 rounded-3xl bg-navy-900 border border-slate-800 shadow-xl">
+                      <div className="text-3xl mb-4">🎯</div>
+                      <h2 className="text-2xl font-bold text-white mb-3">{t.missionTitle}</h2>
+                      <p className="text-sm text-slate-300 leading-relaxed">
+                        To cultivate an inclusive, safe, and transparent collegiate atmosphere where no student suffers in silence. We empower learners with a tamper-proof digital voice while equipping faculty administrators with real-time analytics to address root issues and maintain statutory compliance.
+                      </p>
+                      <div className="mt-6 p-4 rounded-2xl bg-navy-950 border border-sky-500/20 text-xs text-sky-200 leading-relaxed">
+                        💡 <strong>Core Motto:</strong> "Your Voice, Our Responsibility" — Delivering accountability through verified action milestones rather than bureaucratic reassurances.
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* 7 Grievance Categories Grid */}
+                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="text-center max-w-3xl mx-auto mb-10">
+                    <span className="text-xs font-bold text-sky-400 uppercase tracking-widest">Statutory Redressal Wings</span>
+                    <h2 className="text-3xl font-extrabold text-white mt-1">{t.categoriesTitle}</h2>
+                    <p className="text-slate-400 text-sm mt-2">Every grievance filed is automatically triaged and mapped to the college's authorized administrative committee.</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                    {COMPLAINT_CATEGORIES.map(cat => (
+                      <div
+                        key={cat.id}
+                        onClick={() => {
+                          if (isAdmin) handleSwitchUser(users[0]);
+                          setIsSubmitModalOpen(true);
+                        }}
+                        className="p-6 rounded-2xl bg-navy-900 border border-slate-800 hover:border-sky-500/50 hover:-translate-y-1 transition-all cursor-pointer shadow-lg group"
+                      >
+                        <div className="text-3xl mb-3">{cat.icon}</div>
+                        <h3 className="font-bold text-white group-hover:text-sky-400 transition-all">{cat.name}</h3>
+                        <p className="text-xs text-slate-400 mt-2 leading-relaxed">{cat.desc}</p>
+                        <div className="mt-4 pt-3 border-t border-slate-800 text-xs font-bold text-sky-400 flex items-center justify-between">
+                          <span>File in this category</span>
+                          <span>→</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+
+                {/* How It Works - 4 Step Flow */}
+                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="p-8 sm:p-12 rounded-3xl bg-navy-900 border border-slate-800 text-center">
+                    <span className="text-xs font-bold text-sky-400 uppercase tracking-widest">4-Step Transparent Redressal Flow</span>
+                    <h2 className="text-3xl font-extrabold text-white mt-1 mb-8">{t.howItWorksTitle}</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-left">
+                      <div className="p-5 rounded-2xl bg-navy-950 border border-slate-800">
+                        <div className="w-10 h-10 rounded-xl bg-sky-500 text-white font-black flex items-center justify-center mb-3 text-sm">1</div>
+                        <h4 className="font-bold text-white text-sm">Submit Complaint</h4>
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">Fill the structured form with photos or evidence files. Choose optional Anonymous Mode.</p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-navy-950 border border-slate-800">
+                        <div className="w-10 h-10 rounded-xl bg-blue-600 text-white font-black flex items-center justify-center mb-3 text-sm">2</div>
+                        <h4 className="font-bold text-white text-sm">AI Triage & ID</h4>
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">Unique Docket ID generated (e.g. JC-2026-8941). AI suggests priority & routes to designated committee.</p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-navy-950 border border-slate-800">
+                        <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center mb-3 text-sm">3</div>
+                        <h4 className="font-bold text-white text-sm">Authority Action Timeline</h4>
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">Authorities conduct inquiries, dispatch repair teams, and record timestamped progress notes.</p>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-navy-950 border border-slate-800">
+                        <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center mb-3 text-sm">4</div>
+                        <h4 className="font-bold text-white text-sm">Certified Resolution</h4>
+                        <p className="text-xs text-slate-400 mt-1 leading-relaxed">Download official PDF grievance report and submit satisfaction rating (1 to 5 stars) to close.</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Emergency Statutory Helplines & Contact Section */}
+                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-navy-900 via-rose-950/20 to-navy-900 border border-rose-900/40">
+                    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-8">
+                      <div>
+                        <div className="text-xs font-bold text-rose-300 uppercase tracking-widest mb-1">🚨 24x7 Statutory Emergency Helplines</div>
+                        <h3 className="text-2xl font-black text-white">Need Urgent Protection or In Immediate Distress?</h3>
+                        <p className="text-xs text-slate-300 mt-1">Direct escalation contacts for national statutory boards and campus safety squads:</p>
+                      </div>
+                      <div className="flex flex-wrap gap-3">
+                        <a href="tel:18001805522" className="px-5 py-3 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-lg shadow-rose-600/30 flex items-center space-x-2">
+                          <span>📞</span>
+                          <span>National Anti-Ragging: 1800-180-5522</span>
+                        </a>
+                        <a href="tel:1091" className="px-5 py-3 rounded-xl bg-navy-950 hover:bg-slate-800 text-white font-bold text-xs border border-slate-700 flex items-center space-x-2">
+                          <span>🛡️</span>
+                          <span>Women Safety Helpline: 1091</span>
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Interactive Campus Redressal Office Inquiry Form */}
+                    <div className="pt-6 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-300">
+                      <div>
+                        <span className="font-bold text-sky-400 block mb-1 text-sm">🏢 Deanery of Student Welfare</span>
+                        <p>Administrative Block, 1st Floor, Room 104</p>
+                        <p className="mt-1">Email: <span className="text-sky-300">grievance@justicecampus.edu</span></p>
+                        <p>Hours: Mon–Fri, 9:00 AM – 5:00 PM</p>
+                      </div>
+                      <div>
+                        <span className="font-bold text-sky-400 block mb-1 text-sm">⚖️ Anti-Ragging & Equity Desk</span>
+                        <p>Chairperson: Dr. Oviya (Chief Vigilance Officer)</p>
+                        <p className="mt-1">Direct Hotline: +91 94441 98765</p>
+                        <p>Campus Security Patrol: Ext. 400</p>
+                      </div>
+                      <div>
+                        <span className="font-bold text-sky-400 block mb-1 text-sm">🔒 Confidential POSH / ICC Wing</span>
+                        <p>Prof. Meenakshi Sundaram (Presiding Officer)</p>
+                        <p className="mt-1">ICC Cell: icc@justicecampus.edu</p>
+                        <p>Confidential Counseling Available</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+
+              </div>
+            )}
+
+
+            {/* ------------------------------------------------------------- */}
+            {/* 2. DASHBOARD VIEW WITH PROFESSIONAL SIDEBAR NAVIGATION */}
+            {/* ------------------------------------------------------------- */}
+            {(view === 'student-dashboard' || view === 'admin-dashboard') && (
+              <div className="flex-1 flex max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 gap-6">
+
+                {/* Professional Sidebar Navigation */}
+                <aside className={`
+                  fixed inset-y-0 left-0 z-50 w-72 bg-navy-900 border-r border-slate-800 p-6 flex flex-col justify-between transition-transform duration-300 shadow-2xl
+                  md:relative md:inset-auto md:w-64 lg:w-72 md:translate-x-0 md:rounded-3xl md:border md:shadow-xl
+                  ${isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+                `}>
+                  
+                  <div className="space-y-6">
+                    {/* Mobile close button */}
+                    <div className="flex md:hidden items-center justify-between pb-3 border-b border-slate-800">
+                      <span className="font-bold text-white text-sm">Navigation Menu</span>
+                      <button onClick={() => setIsMobileSidebarOpen(false)} className="text-slate-400 hover:text-white font-bold p-1">✕</button>
+                    </div>
+
+                    {/* User Mini Profile Card */}
+                    <div className="p-3.5 rounded-2xl bg-navy-950 border border-slate-800 flex items-center space-x-3">
+                      <img src={currentUser.avatar} alt={currentUser.fullName} className="w-11 h-11 rounded-xl object-cover border border-sky-400 shadow-md" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-black text-white truncate">{currentUser.fullName}</div>
+                        <div className="text-[10px] text-sky-300 truncate">
+                          {isAdmin ? (currentUser.designation || 'Admin Authority') : currentUser.registerNo}
+                        </div>
+                        <span className={`inline-block mt-0.5 text-[9px] font-black uppercase px-2 py-0.2 rounded-full ${isAdmin ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'}`}>
+                          {isAdmin ? 'Admin Console' : 'Student Portal'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Sidebar Nav Items */}
+                    <div className="space-y-1">
+                      <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-3 mb-2">
+                        {isAdmin ? 'Authority Workspace' : 'Student Grievance Hub'}
+                      </div>
+
+                      {/* Overview */}
+                      <button
+                        onClick={() => { setSidebarTab('overview'); setIsMobileSidebarOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${sidebarTab === 'overview' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30 shadow-md' : 'text-slate-300 hover:bg-navy-950 hover:text-white'}`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <span>📊</span>
+                          <span>{t.overview}</span>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 font-mono">
+                          {metrics.total}
+                        </span>
+                      </button>
+
+                      {/* Submit Grievance (Student Only) */}
+                      {!isAdmin && (
+                        <button
+                          onClick={() => { setIsSubmitModalOpen(true); setIsMobileSidebarOpen(false); }}
+                          className="w-full flex items-center space-x-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-lg shadow-sky-500/20 hover:scale-[1.02] transition-all my-2"
+                        >
+                          <span>➕</span>
+                          <span>{t.submitComplaint}</span>
+                        </button>
+                      )}
+
+                      {/* Under Review / Pending */}
+                      <button
+                        onClick={() => { setSidebarTab('pending'); setIsMobileSidebarOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${sidebarTab === 'pending' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'text-slate-300 hover:bg-navy-950 hover:text-white'}`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <span>⏳</span>
+                          <span>Under Review / Pending</span>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-mono">
+                          {metrics.submitted + metrics.underReview}
+                        </span>
+                      </button>
+
+                      {/* In Progress */}
+                      <button
+                        onClick={() => { setSidebarTab('in-progress'); setIsMobileSidebarOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${sidebarTab === 'in-progress' ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'text-slate-300 hover:bg-navy-950 hover:text-white'}`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <span>⚙️</span>
+                          <span>In Progress Actions</span>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-mono">
+                          {metrics.inProgress}
+                        </span>
+                      </button>
+
+                      {/* Resolved & Closed */}
+                      <button
+                        onClick={() => { setSidebarTab('resolved'); setIsMobileSidebarOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${sidebarTab === 'resolved' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'text-slate-300 hover:bg-navy-950 hover:text-white'}`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <span>✅</span>
+                          <span>Resolved & Closed</span>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono">
+                          {metrics.resolvedTotal}
+                        </span>
+                      </button>
+
+                      {/* Escalated to Principal */}
+                      <button
+                        onClick={() => { setSidebarTab('escalated'); setIsMobileSidebarOpen(false); }}
+                        className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all ${sidebarTab === 'escalated' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30' : 'text-slate-300 hover:bg-navy-950 hover:text-white'}`}
+                      >
+                        <div className="flex items-center space-x-2.5">
+                          <span>🚨</span>
+                          <span>Escalated to Principal</span>
+                        </div>
+                        {metrics.escalated > 0 && (
+                          <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-500 text-white font-mono font-black animate-pulse">
+                            {metrics.escalated}
+                          </span>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Quick Demo Switcher Section in Sidebar */}
+                    <div className="p-3.5 rounded-2xl bg-navy-950 border border-slate-800 space-y-2">
+                      <span className="text-[10px] font-bold text-sky-400 uppercase tracking-wider block">1-Click Demo Profiles</span>
+                      <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                        <button
+                          onClick={() => handleSwitchUser(users[0])}
+                          className={`p-1.5 rounded-lg border font-bold text-left truncate ${currentUser?.userId === 'STU2026-01' ? 'bg-sky-500/20 border-sky-400 text-sky-200' : 'border-slate-800 text-slate-400 hover:text-white'}`}
+                        >
+                          🎓 Dharsan
+                        </button>
+                        <button
+                          onClick={() => handleSwitchUser(users[1])}
+                          className={`p-1.5 rounded-lg border font-bold text-left truncate ${currentUser?.userId === 'STU2026-02' ? 'bg-sky-500/20 border-sky-400 text-sky-200' : 'border-slate-800 text-slate-400 hover:text-white'}`}
+                        >
+                          🎓 Kaviya
+                        </button>
+                        <button
+                          onClick={() => handleSwitchUser(users[5])}
+                          className={`p-1.5 rounded-lg border font-bold text-left truncate ${currentUser?.userId === 'ADM2026-01' ? 'bg-indigo-500/20 border-indigo-400 text-indigo-200' : 'border-slate-800 text-slate-400 hover:text-white'}`}
+                        >
+                          🛡️ Oviya (Admin)
+                        </button>
+                        <button
+                          onClick={() => handleSwitchUser(users[6])}
+                          className={`p-1.5 rounded-lg border font-bold text-left truncate ${currentUser?.userId === 'ADM2026-02' ? 'bg-indigo-500/20 border-indigo-400 text-indigo-200' : 'border-slate-800 text-slate-400 hover:text-white'}`}
+                        >
+                          🛡️ Dhilip (Admin)
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Sidebar Footer */}
+                  <div className="pt-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+                    <button onClick={() => setIsAuthModalOpen(true)} className="hover:text-sky-300 font-bold flex items-center space-x-1">
+                      <span>🔄</span>
+                      <span>Switch Account</span>
+                    </button>
+                    <button onClick={() => { setCurrentUser(null); setView('landing'); showToast('Signed out successfully.'); }} className="hover:text-rose-400 font-bold">
+                      {t.logout}
+                    </button>
+                  </div>
+
+                </aside>
+
+                {/* Dashboard Main Content Pane */}
+                <main className="flex-1 min-w-0 space-y-6">
+
+                  {/* Top Dashboard Banner */}
+                  <div className="p-6 sm:p-8 rounded-3xl bg-navy-900 border border-slate-800 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                    <div className="flex items-center space-x-4">
+                      <img src={currentUser.avatar} alt={currentUser.fullName} className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-sky-400 shadow-xl" />
+                      <div>
+                        <div className="flex items-center space-x-2">
+                          <h1 className="text-2xl font-black text-white">{currentUser.fullName}</h1>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isAdmin ? 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/40' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'}`}>
+                            {isAdmin ? 'Disciplinary Authority' : 'Verified Student Complainant'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-sky-300 mt-1">
+                          {isAdmin ? currentUser.designation : `${currentUser.registerNo} • ${currentUser.department} • ${currentUser.yearOfStudy}`}
+                        </p>
+                        <div className="text-xs text-slate-400 mt-1 flex flex-wrap items-center gap-3">
+                          <span>📧 {currentUser.email}</span>
+                          <span>📞 {currentUser.phone}</span>
+                          {!isAdmin && <span>📍 {currentUser.hostelName}</span>}
+                        </div>
+                      </div>
+                    </div>
+
+                    {!isAdmin ? (
+                      <button
+                        onClick={() => setIsSubmitModalOpen(true)}
+                        className="w-full md:w-auto px-6 py-3.5 rounded-2xl font-bold text-xs sm:text-sm bg-gradient-to-r from-sky-500 to-blue-600 hover:scale-105 text-white shadow-xl shadow-sky-500/25 transition-all flex items-center justify-center space-x-2"
+                      >
+                        <span>➕</span>
+                        <span>{t.submitComplaint}</span>
+                      </button>
+                    ) : (
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => setSidebarTab('escalated')}
+                          className="px-4 py-2.5 rounded-xl text-xs font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 hover:bg-rose-500 hover:text-white transition-all flex items-center space-x-1"
+                        >
+                          <span>⚠️</span>
+                          <span>Overdue SLA Review ({metrics.escalated})</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 4 Interactive KPI Counter Cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div
+                      onClick={() => setSidebarTab('overview')}
+                      className={`p-4 sm:p-5 rounded-2xl bg-navy-900 border transition-all cursor-pointer ${sidebarTab === 'overview' ? 'border-sky-400 shadow-lg shadow-sky-500/10' : 'border-slate-800 hover:border-slate-700'}`}
+                    >
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Lodged Dockets</span>
+                      <div className="text-2xl sm:text-3xl font-black text-white mt-1.5">{metrics.total}</div>
+                      <span className="text-[11px] text-sky-400 mt-1 block">100% digitally sealed</span>
+                    </div>
+
+                    <div
+                      onClick={() => setSidebarTab('pending')}
+                      className={`p-4 sm:p-5 rounded-2xl bg-navy-900 border transition-all cursor-pointer ${sidebarTab === 'pending' ? 'border-amber-400 shadow-lg shadow-amber-500/10' : 'border-slate-800 hover:border-slate-700'}`}
+                    >
+                      <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">Under Review / Pending</span>
+                      <div className="text-2xl sm:text-3xl font-black text-amber-400 mt-1.5">{metrics.submitted + metrics.underReview}</div>
+                      <span className="text-[11px] text-slate-400 mt-1 block">Awaiting authority hearing</span>
+                    </div>
+
+                    <div
+                      onClick={() => setSidebarTab('resolved')}
+                      className={`p-4 sm:p-5 rounded-2xl bg-navy-900 border transition-all cursor-pointer ${sidebarTab === 'resolved' ? 'border-emerald-400 shadow-lg shadow-emerald-500/10' : 'border-slate-800 hover:border-slate-700'}`}
+                    >
+                      <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider block">Resolved & Closed</span>
+                      <div className="text-2xl sm:text-3xl font-black text-emerald-400 mt-1.5">{metrics.resolvedTotal}</div>
+                      <span className="text-[11px] text-slate-400 mt-1 block">{metrics.resolutionRate}% resolution rate</span>
+                    </div>
+
+                    <div
+                      onClick={() => setSidebarTab('escalated')}
+                      className={`p-4 sm:p-5 rounded-2xl bg-navy-900 border transition-all cursor-pointer ${sidebarTab === 'escalated' ? 'border-rose-400 shadow-lg shadow-rose-500/10' : 'border-slate-800 hover:border-slate-700'}`}
+                    >
+                      <span className="text-xs font-bold text-rose-400 uppercase tracking-wider block">Escalated Cases</span>
+                      <div className="text-2xl sm:text-3xl font-black text-rose-400 mt-1.5">{metrics.escalated}</div>
+                      <span className="text-[11px] text-rose-300 mt-1 block">Principal bench review</span>
+                    </div>
+                  </div>
+
+                  {/* Search and Multi-Filter Control Toolbar */}
+                  <div className="p-4 rounded-2xl bg-navy-900 border border-slate-800 shadow-lg space-y-3">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      {/* Search Input */}
+                      <div className="flex-1 relative">
+                        <span className="absolute left-3.5 top-3 text-slate-400">🔍</span>
+                        <input
+                          type="text"
+                          value={searchQuery}
+                          onChange={e => setSearchQuery(e.target.value)}
+                          placeholder={t.searchPlaceholder}
+                          className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-navy-950 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sky-500"
+                        />
+                        {searchQuery && (
+                          <button onClick={() => setSearchQuery('')} className="absolute right-3.5 top-2.5 text-slate-400 hover:text-white text-xs">✕</button>
+                        )}
+                      </div>
+
+                      {/* Dropdown Filters */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Category Filter */}
+                        <select
+                          value={filterCategory}
+                          onChange={e => setFilterCategory(e.target.value)}
+                          className="px-3 py-2.5 rounded-xl bg-navy-950 border border-slate-700 text-xs font-semibold text-slate-200 focus:outline-none focus:border-sky-500"
+                        >
+                          <option value="All">{t.allCategories}</option>
+                          {COMPLAINT_CATEGORIES.map(c => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+
+                        {/* Status Filter */}
+                        <select
+                          value={filterStatus}
+                          onChange={e => setFilterStatus(e.target.value)}
+                          className="px-3 py-2.5 rounded-xl bg-navy-950 border border-slate-700 text-xs font-semibold text-slate-200 focus:outline-none focus:border-sky-500"
+                        >
+                          <option value="All">{t.allStatuses}</option>
+                          {COMPLAINT_STAGES.map(s => (
+                            <option key={s.key} value={s.key}>{s.label}</option>
+                          ))}
+                        </select>
+
+                        {/* Priority Filter */}
+                        <select
+                          value={filterPriority}
+                          onChange={e => setFilterPriority(e.target.value)}
+                          className="px-3 py-2.5 rounded-xl bg-navy-950 border border-slate-700 text-xs font-semibold text-slate-200 focus:outline-none focus:border-sky-500"
+                        >
+                          <option value="All">All Priorities</option>
+                          <option value="Critical">Critical Priority</option>
+                          <option value="High">High Priority</option>
+                          <option value="Medium">Medium Priority</option>
+                          <option value="Low">Low Priority</option>
+                        </select>
+
+                        {(filterCategory !== 'All' || filterStatus !== 'All' || filterPriority !== 'All' || searchQuery) && (
+                          <button
+                            onClick={() => { setFilterCategory('All'); setFilterStatus('All'); setFilterPriority('All'); setSearchQuery(''); }}
+                            className="px-3 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white bg-slate-800"
+                          >
+                            {t.reset}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Complaints Dockets List */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h2 className="text-base font-bold text-white flex items-center space-x-2">
+                        <span>📋</span>
+                        <span>
+                          {isAdmin ? `All Campus Grievance Dockets (${displayedComplaints.length})` : `My Lodged Grievance Dockets (${displayedComplaints.length})`}
+                        </span>
+                      </h2>
+                      <span className="text-xs text-slate-400">
+                        {sidebarTab !== 'overview' ? `Filter: ${sidebarTab.toUpperCase()}` : 'Real-Time Database Sync'}
+                      </span>
+                    </div>
+
+                    {displayedComplaints.length === 0 ? (
+                      <div className="p-12 rounded-3xl bg-navy-900 border border-slate-800 text-center space-y-3">
+                        <span className="text-4xl block">📭</span>
+                        <h3 className="text-base font-bold text-white">No grievance dockets match this filter</h3>
+                        <p className="text-xs text-slate-400 max-w-sm mx-auto">Try resetting your search query or filter settings above.</p>
+                        <button
+                          onClick={() => { setFilterCategory('All'); setFilterStatus('All'); setFilterPriority('All'); setSearchQuery(''); setSidebarTab('overview'); }}
+                          className="px-4 py-2 rounded-xl text-xs font-bold bg-sky-500 text-white"
+                        >
+                          View All Grievances
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {displayedComplaints.map(c => {
+                          const stagesList = COMPLAINT_STAGES.map(s => s.key);
+                          const currentStepIdx = stagesList.indexOf(c.status);
+
+                          return (
+                            <div
+                              key={c.id}
+                              className={`p-6 rounded-2xl bg-navy-900 border transition-all ${c.isEscalated ? 'border-rose-500/60 shadow-lg shadow-rose-950/20' : 'border-slate-800 hover:border-slate-700'}`}
+                            >
+                              {/* Docket Header Badges */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  {/* Unique Complaint ID */}
+                                  <span className="font-mono text-xs sm:text-sm font-black text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded-lg border border-sky-500/30">
+                                    {c.complaintId}
+                                  </span>
+
+                                  {/* Demo vs Live Badge */}
+                                  {c.isSampleData ? (
+                                    <span className="text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                                      {t.sampleBadge}
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-black tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                                      {t.liveBadge}
+                                    </span>
+                                  )}
+
+                                  {/* Category */}
+                                  <span className="text-xs font-bold text-slate-200 px-2.5 py-0.5 rounded bg-navy-950 border border-slate-700">
+                                    {c.category}
+                                  </span>
+
+                                  {/* Priority */}
+                                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${c.priority === 'Critical' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' : c.priority === 'High' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                                    {c.priority} Priority
+                                  </span>
+
+                                  {/* Status */}
+                                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${c.status === 'Resolved' || c.status === 'Closed' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-sky-500/20 text-sky-300 border-sky-500/40'}`}>
+                                    {c.status}
+                                  </span>
+
+                                  {/* Anonymous Tag */}
+                                  {c.isAnonymous && (
+                                    <span className="text-[10px] font-bold text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/30">
+                                      🕵️ Shielded Anonymous
+                                    </span>
+                                  )}
+
+                                  {/* Escalated Alert Tag */}
+                                  {c.isEscalated && (
+                                    <span className="text-[10px] font-black text-rose-300 bg-rose-500/20 px-2.5 py-0.5 rounded-md border border-rose-500/50 animate-pulse">
+                                      ⚠️ ESCALATED TO PRINCIPAL
+                                    </span>
+                                  )}
+                                </div>
+
+                                <div className="text-xs text-slate-400">
+                                  Assigned Body: <strong className="text-sky-300">{c.assignedAuthority}</strong>
+                                </div>
+                              </div>
+
+                              {/* Grievance Narrative Content */}
+                              <div className="py-4 space-y-2">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                  <h3 className="text-base font-bold text-white">{c.title}</h3>
+                                  <div className="text-xs text-slate-400">
+                                    Complainant: {c.isAnonymous ? (
+                                      <span className="text-purple-300 font-bold">🕵️ {t.anonymous}</span>
+                                    ) : (
+                                      <strong className="text-slate-200">{c.studentName} ({c.studentRegisterNo})</strong>
+                                    )}
+                                  </div>
+                                </div>
+
+                                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">{c.description}</p>
+
+                                <div className="text-xs text-slate-400 flex flex-wrap items-center gap-4 pt-1">
+                                  <span>📍 <strong>Location:</strong> {c.incidentLocation}</span>
+                                  <span>📅 <strong>Incident Date:</strong> {c.incidentDate}</span>
+                                  {c.evidenceName && (
+                                    <span className="text-sky-400 font-bold flex items-center space-x-1">
+                                      <span>📎 Evidence Attached:</span>
+                                      <span>{c.evidenceName}</span>
+                                    </span>
+                                  )}
+                                </div>
+
+                                {c.resolutionNotes && (
+                                  <div className="mt-3 p-3.5 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-xs text-emerald-200">
+                                    <strong className="block mb-0.5 text-emerald-300">✓ Official Certified Resolution:</strong>
+                                    {c.resolutionNotes}
+                                    {c.studentRating && (
+                                      <div className="mt-2 font-bold text-emerald-400">
+                                        Complainant Rating: {'⭐'.repeat(c.studentRating)} ({c.studentRating}/5 Stars) — "{c.studentFeedback || 'Resolved'}"
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* 5-Stage Visual Timeline Progress Bar */}
+                              <div className="p-3.5 bg-navy-950 rounded-xl border border-slate-800 my-2">
+                                <div className="grid grid-cols-5 gap-2 text-center">
+                                  {COMPLAINT_STAGES.map((stg, idx) => {
+                                    const isDone = idx <= currentStepIdx;
+                                    const isCurrent = idx === currentStepIdx;
+                                    return (
+                                      <div key={stg.key} className="space-y-1">
+                                        <div className={`h-1.5 rounded-full transition-all ${isDone ? (c.status === 'Resolved' || c.status === 'Closed' ? 'bg-emerald-400' : 'bg-sky-400') : 'bg-slate-700'}`} />
+                                        <div className="flex items-center justify-center space-x-1">
+                                          <span className={`text-[10px] truncate block ${isCurrent ? 'text-sky-300 font-bold' : isDone ? 'text-slate-300 font-medium' : 'text-slate-600'}`}>
+                                            {isDone ? '✓ ' : ''}{stg.label}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Action Footer: Admin Tools vs Student Tools */}
+                              <div className="pt-3 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3">
+                                
+                                {/* Admin Specific Controls */}
+                                {isAdmin ? (
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    {/* Advance Status Dropdown / Action */}
+                                    <button
+                                      onClick={() => {
+                                        const nextSt = c.status === 'Submitted' ? 'Under Review' : c.status === 'Under Review' ? 'In Progress' : 'Resolved';
+                                        const note = prompt(`Enter official administrative remarks for advancing status to "${nextSt}":`, `Case reviewed by ${currentUser.fullName}. Committee inquiry underway.`);
+                                        if (note) {
+                                          handleUpdateComplaintStatus(c.complaintId, nextSt, `Action Milestone: ${nextSt}`, note);
+                                        }
+                                      }}
+                                      className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition-all flex items-center space-x-1"
+                                    >
+                                      <span>✏️</span>
+                                      <span>{t.updateStatusBtn}</span>
+                                    </button>
+
+                                    {/* Escalate Delayed Case to Principal */}
+                                    {!c.isEscalated && c.status !== 'Resolved' && c.status !== 'Closed' && (
+                                      <button
+                                        onClick={() => {
+                                          const reason = prompt('Enter justification for immediate SLA escalation to Principal:', 'Resolution delayed beyond 48 hours for high-priority student complaint.');
+                                          if (reason) handleEscalateComplaint(c.complaintId, reason);
+                                        }}
+                                        className="px-3.5 py-1.5 rounded-lg text-xs font-bold bg-rose-500/20 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/40 transition-all flex items-center space-x-1"
+                                      >
+                                        <span>🚨</span>
+                                        <span>{t.escalateBtn}</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                ) : (
+                                  /* Student Specific Controls */
+                                  <div className="flex items-center space-x-2">
+                                    {c.status === 'Resolved' && !c.studentRating && (
+                                      <button
+                                        onClick={() => {
+                                          const rating = prompt('Rate your satisfaction with this resolution (1 to 5 stars):', '5');
+                                          const fb = prompt('Add closure feedback comment:', 'Satisfied with the quick action.');
+                                          if (rating) handleStudentFeedback(c.complaintId, Number(rating), fb);
+                                        }}
+                                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/20 hover:bg-emerald-500 text-emerald-300 hover:text-white border border-emerald-500/40 transition-all flex items-center space-x-1"
+                                      >
+                                        <span>⭐</span>
+                                        <span>{t.rateResolutionBtn}</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Common Docket Actions */}
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={() => printGrievanceDocket(c)}
+                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all flex items-center space-x-1"
+                                  >
+                                    <span>🖨️</span>
+                                    <span>PDF Docket</span>
+                                  </button>
+
+                                  <button
+                                    onClick={() => setActiveDetailsComplaint(c)}
+                                    className="px-4 py-1.5 rounded-lg text-xs font-bold bg-sky-500 hover:bg-sky-400 text-white shadow-md shadow-sky-500/20 transition-all flex items-center space-x-1"
+                                  >
+                                    <span>🕒</span>
+                                    <span>{t.viewTimelineBtn} →</span>
+                                  </button>
+                                </div>
+
+                              </div>
+
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                </main>
+
+              </div>
+            )}
+
+
+            {/* ------------------------------------------------------------- */}
+            {/* 3. ANALYTICS VIEW */}
+            {/* ------------------------------------------------------------- */}
+            {view === 'analytics' && (
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+                <div>
+                  <span className="text-xs font-bold text-sky-400 uppercase tracking-widest">Auditable Institutional Transparency</span>
+                  <h1 className="text-3xl font-black text-white mt-1">Campus Grievance Analytics & Compliance</h1>
+                  <p className="text-sm text-slate-400 mt-1">Real-time metrics auditing grievance intake, resolution velocity, category distributions, and statutory SLA compliance.</p>
+                </div>
+
+                {/* KPI Cards */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-6 rounded-2xl bg-navy-900 border border-slate-800">
+                    <span className="text-xs font-bold text-slate-400 uppercase">Total Dockets Lodged</span>
+                    <div className="text-3xl font-black text-white mt-2">{complaints.length}</div>
+                    <span className="text-xs text-sky-400 mt-1 block">100% digitally recorded</span>
+                  </div>
+
+                  <div className="p-6 rounded-2xl bg-navy-900 border border-slate-800">
+                    <span className="text-xs font-bold text-emerald-400 uppercase">Resolution Efficiency</span>
+                    <div className="text-3xl font-black text-emerald-400 mt-2">
+                      {complaints.length > 0 ? Math.round((complaints.filter(c => c.status === 'Resolved' || c.status === 'Closed').length / complaints.length) * 100) : 0}%
+                    </div>
+                    <span className="text-xs text-slate-400 mt-1 block">Exceeds university benchmark</span>
+                  </div>
+
+                  <div className="p-6 rounded-2xl bg-navy-900 border border-slate-800">
+                    <span className="text-xs font-bold text-sky-400 uppercase">Average Resolution Turnaround</span>
+                    <div className="text-3xl font-black text-sky-400 mt-2">2.4 Days</div>
+                    <span className="text-xs text-slate-400 mt-1 block">Well under 72h SLA threshold</span>
+                  </div>
+
+                  <div className="p-6 rounded-2xl bg-navy-900 border border-slate-800">
+                    <span className="text-xs font-bold text-rose-400 uppercase">Escalations Monitored</span>
+                    <div className="text-3xl font-black text-rose-400 mt-2">
+                      {complaints.filter(c => c.isEscalated).length}
+                    </div>
+                    <span className="text-xs text-rose-300 mt-1 block">Active Principal bench review</span>
+                  </div>
+                </div>
+
+                {/* Category & Status Analytics Breakdown */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  
+                  {/* Category Breakdown */}
+                  <div className="p-6 sm:p-8 rounded-3xl bg-navy-900 border border-slate-800">
+                    <h2 className="text-base font-bold text-white mb-6 flex items-center space-x-2">
+                      <span>📊</span>
+                      <span>Complaints by Category</span>
+                    </h2>
+                    <div className="space-y-4">
+                      {COMPLAINT_CATEGORIES.map(cat => {
+                        const count = complaints.filter(c => c.category === cat.id).length;
+                        const maxCount = Math.max(...COMPLAINT_CATEGORIES.map(k => complaints.filter(c => c.category === k.id).length), 1);
+                        const pct = Math.round((count / maxCount) * 100);
+
+                        return (
+                          <div key={cat.id} className="space-y-1">
+                            <div className="flex justify-between text-xs font-semibold text-slate-300">
+                              <span className="flex items-center space-x-1.5">
+                                <span>{cat.icon}</span>
+                                <span>{cat.name}</span>
+                              </span>
+                              <span className="text-sky-400 font-bold">{count} dockets</span>
+                            </div>
+                            <div className="h-2.5 bg-navy-950 rounded-full overflow-hidden border border-slate-800">
+                              <div style={{ width: `${pct}%` }} className="h-full bg-gradient-to-r from-sky-500 to-blue-600 rounded-full" />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Redressal Committee Oversight */}
+                  <div className="p-6 sm:p-8 rounded-3xl bg-navy-900 border border-slate-800">
+                    <h2 className="text-base font-bold text-white mb-6 flex items-center space-x-2">
+                      <span>🏛️</span>
+                      <span>Statutory Redressal Committee Oversight</span>
+                    </h2>
+                    <div className="space-y-3">
+                      {AUTHORITIES_LIST.map(a => {
+                        const authorityComplaints = complaints.filter(c => c.assignedAuthority.includes(a.name));
+                        return (
+                          <div key={a.code} className="p-3.5 rounded-xl bg-navy-950 border border-slate-800 flex items-center justify-between text-xs">
+                            <div>
+                              <span className="font-bold text-white text-sm block">{a.name}</span>
+                              <span className="text-slate-400 mt-0.5 block">Chair: <strong className="text-sky-300">{a.head}</strong></span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 text-[10px]">
+                                Active Oversight
+                              </span>
+                              <span className="block text-[10px] text-slate-400 mt-1">{authorityComplaints.length} cases assigned</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+
+            {/* ------------------------------------------------------------- */}
+            {/* 4. ABOUT US VIEW */}
+            {/* ------------------------------------------------------------- */}
+            {view === 'about' && (
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-12">
+                <div className="text-center max-w-3xl mx-auto space-y-4">
+                  <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30 text-xs font-bold uppercase tracking-wider">
+                    🏆 College Hackathon Finalist Project
+                  </div>
+                  <h1 className="text-4xl sm:text-5xl font-black text-white">About Justice Campus</h1>
+                  <p className="text-sky-300 font-bold text-lg">
+                    Developed by Team <span className="text-white underline decoration-sky-400">Justice Minds</span>
+                  </p>
+                  <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+                    <strong>Justice Campus</strong> is an institutional-grade, full-stack student grievance redressal portal. Built with secure role-based access, automated AI severity triage, a 5-stage auditable action timeline, and voluntary anonymous reporting, it brings total transparency and accountability to collegiate welfare.
+                  </p>
+                </div>
+
+                {/* Team Members Grid */}
+                <div>
+                  <div className="text-center mb-8">
+                    <h2 className="text-2xl font-bold text-white">{t.teamTitle}</h2>
+                    <p className="text-xs text-slate-400 mt-1">Student Developers & Innovators</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {[
+                      {
+                        name: "Oviya K",
+                        role: "Team Lead & Full-Stack Architect",
+                        dept: "Artificial Intelligence & Data Science",
+                        badge: "Team Lead",
+                        avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=300"
+                      },
+                      {
+                        name: "Dhilipkumar N B",
+                        role: "Backend & Security Engineer",
+                        dept: "Information Technology",
+                        badge: "Security & API",
+                        avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=300"
+                      },
+                      {
+                        name: "Anbu S",
+                        role: "UI/UX Designer & Frontend",
+                        dept: "Computer Science & Engineering",
+                        badge: "UI/UX & Design",
+                        avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=300"
+                      },
+                      {
+                        name: "Vaishnavi D",
+                        role: "Database & Analytics Specialist",
+                        dept: "Electronics & Communication Engg",
+                        badge: "Database & SQL",
+                        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=300"
+                      }
+                    ].map(member => (
+                      <div key={member.name} className="p-6 rounded-3xl bg-navy-900 border border-slate-800 text-center shadow-xl hover:-translate-y-1 transition-all">
+                        <img src={member.avatar} alt={member.name} className="w-24 h-24 rounded-2xl mx-auto object-cover border-2 border-sky-400/40 shadow-lg" />
+                        <h3 className="text-lg font-bold text-white mt-4">{member.name}</h3>
+                        <p className="text-xs font-bold text-sky-400">{member.role}</p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">{member.dept}</p>
+                        <span className="inline-block mt-3 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                          {member.badge}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Hackathon Specs Card */}
+                <div className="p-8 rounded-3xl bg-navy-900 border border-sky-500/30 text-center space-y-2">
+                  <h3 className="text-lg font-bold text-white">Full-Stack Hackathon Specifications</h3>
+                  <p className="text-xs text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                    Engineered using React 18, Tailwind CSS, Node.js Express REST API, SQLite/MySQL-ready database schema, Web Audio chime alerts, and browser PDF report generation. Built to withstand real-world campus traffic while providing total privacy protection.
+                  </p>
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* Footer */}
+          <footer className="bg-navy-950 border-t border-slate-800 text-slate-400 py-8 text-xs">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-xl">⚖️</span>
+                <span className="font-bold text-white">JUSTICE CAMPUS</span>
+                <span>— {t.tagline}</span>
+              </div>
+              <div className="text-center sm:text-right">
+                <div>Developed by Team <strong>Justice Minds</strong>: Oviya K • Dhilipkumar N B • Anbu S • Vaishnavi D</div>
+                <div className="text-[10px] text-slate-500 mt-0.5">UGC & AICTE Student Grievance Redressal Mechanism • College Hackathon Edition</div>
+              </div>
+            </div>
+          </footer>
+
+
+          {/* ============================================================= */}
+          {/* MODAL 1: SUBMIT NEW COMPLAINT */}
+          {/* ============================================================= */}
+          {isSubmitModalOpen && (
+            <SubmitComplaintModal
+              onClose={() => setIsSubmitModalOpen(false)}
+              onSubmit={handleCreateComplaint}
+              currentUser={currentUser}
+              categories={COMPLAINT_CATEGORIES}
+            />
+          )}
+
+
+          {/* ============================================================= */}
+          {/* MODAL 2: COMPLAINT DETAILS & CERTIFIED TIMELINE */}
+          {/* ============================================================= */}
+          {activeDetailsComplaint && (
+            <ComplaintTimelineModal
+              complaint={activeDetailsComplaint}
+              onClose={() => setActiveDetailsComplaint(null)}
+              onPrint={() => printGrievanceDocket(activeDetailsComplaint)}
+            />
+          )}
+
+
+          {/* ============================================================= */}
+          {/* MODAL 3: AUTHENTICATION & QUICK DEMO LOGIN */}
+          {/* ============================================================= */}
+          {isAuthModalOpen && (
+            <AuthModal
+              onClose={() => setIsAuthModalOpen(false)}
+              onLogin={handleSwitchUser}
+              onRegister={handleRegisterStudent}
+              users={users}
+              initialTab={authModalTab}
+            />
+          )}
+
+
+          {/* ============================================================= */}
+          {/* DRAWER: NOTIFICATIONS */}
+          {/* ============================================================= */}
+          {isNotificationDrawerOpen && (
+            <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex justify-end">
+              <div className="w-full max-w-md bg-navy-950 border-l border-slate-800 h-full p-6 shadow-2xl flex flex-col">
+                <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xl">🔔</span>
+                    <h3 className="font-bold text-white text-base">Notifications ({unreadCount} unread)</h3>
+                  </div>
+                  <button onClick={() => setIsNotificationDrawerOpen(false)} className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold hover:text-white">✕</button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto py-4 space-y-3">
+                  {userNotifications.length === 0 ? (
+                    <div className="text-center py-12 text-slate-500 text-xs">No notifications yet.</div>
+                  ) : (
+                    userNotifications.map(n => (
+                      <div key={n.id} className={`p-4 rounded-xl border text-xs space-y-1.5 transition-all ${n.isRead ? 'bg-navy-900 border-slate-800 text-slate-300' : 'bg-navy-900/90 border-sky-500/40 text-white'}`}>
+                        <div className="flex justify-between items-center text-[10px] font-bold text-sky-400">
+                          <span className="uppercase">{n.type.replace('_', ' ')}</span>
+                          <span className="text-slate-500">{new Date(n.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <div className="font-bold text-white">{n.title}</div>
+                        <div className="text-slate-300 leading-relaxed">{n.message}</div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <div className="pt-4 border-t border-slate-800">
+                  <button
+                    onClick={() => {
+                      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+                      showToast('All notifications marked as read.');
+                    }}
+                    className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200"
+                  >
+                    Mark All as Read
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        </div>
+      );
+    }
+
+
+    // ====================================================================
+    // COMPONENT: SUBMIT COMPLAINT MODAL
+    // ====================================================================
+    function SubmitComplaintModal({ onClose, onSubmit, currentUser, categories }) {
+      const [category, setCategory] = useState('Bullying');
+      const [title, setTitle] = useState('');
+      const [description, setDescription] = useState('');
+      const [incidentDate, setIncidentDate] = useState(new Date().toISOString().split('T')[0]);
+      const [incidentLocation, setIncidentLocation] = useState('Main Campus Premises');
+      const [priority, setPriority] = useState('Medium');
+      const [isAnonymous, setIsAnonymous] = useState(false);
+      const [evidenceName, setEvidenceName] = useState('');
+      const [aiResult, setAiResult] = useState(null);
+
+      const triggerAiSuggestion = () => {
+        if (!title && !description) {
+          alert('Please enter a brief title or description first to allow AI classification.');
+          return;
+        }
+        const res = analyzeComplaintText(title, description);
+        setAiResult(res);
+      };
+
+      const handleFormSubmit = (e) => {
+        e.preventDefault();
+        onSubmit({
+          studentId: currentUser?.userId || 'STU2026-01',
+          studentName: currentUser?.fullName || 'Dharsan',
+          studentEmail: currentUser?.email || 'studentskit@gmail.com',
+          studentRegisterNo: currentUser?.registerNo || '711522CS101',
+          category,
+          title,
+          description,
+          incidentDate,
+          incidentLocation,
+          priority,
+          isAnonymous,
+          evidenceName,
+          evidenceUrl: evidenceName ? 'https://images.unsplash.com/photo-1548839140-29a749e1bc4e?auto=format&fit=crop&q=80&w=600' : ''
+        });
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-navy-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="text-xl font-bold text-white flex items-center space-x-2">
+                  <span>📢</span>
+                  <span>Submit Campus Grievance</span>
+                </h3>
+                <p className="text-xs text-sky-400 mt-0.5">Encrypted & timestamped digital grievance docket</p>
+              </div>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold hover:text-white">✕</button>
+            </div>
+
+            <form onSubmit={handleFormSubmit} className="space-y-4 mt-5">
+              
+              {/* Category Selection */}
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Grievance Category *</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {categories.map(c => (
+                    <button
+                      type="button"
+                      key={c.id}
+                      onClick={() => setCategory(c.id)}
+                      className={`p-2.5 rounded-xl text-left border text-xs font-bold transition-all flex flex-col justify-between ${category === c.id ? 'bg-sky-500/20 border-sky-400 text-sky-300 shadow-sm' : 'bg-navy-950 border-slate-800 text-slate-400 hover:border-slate-700'}`}
+                    >
+                      <span className="text-base mb-1">{c.icon}</span>
+                      <span className="truncate">{c.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Title Input */}
+              <div>
+                <label className="text-xs font-bold text-slate-300 block mb-1">Brief Subject / Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={title}
+                  onChange={e => setTitle(e.target.value)}
+                  placeholder="e.g. RO Drinking water filter dispensing brown turbid water"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              {/* Description & AI Triage Trigger */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-300">Detailed Chronological Statement *</label>
+                  <button
+                    type="button"
+                    onClick={triggerAiSuggestion}
+                    className="text-[11px] font-bold text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 px-2.5 py-0.5 rounded-lg transition-all flex items-center space-x-1"
+                  >
+                    <span>⚡</span>
+                    <span>AI Suggest Category & Priority</span>
+                  </button>
+                </div>
+                <textarea
+                  required
+                  rows={4}
+                  value={description}
+                  onChange={e => setDescription(e.target.value)}
+                  placeholder="Provide precise dates, times, locations, and descriptions of what occurred..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-sky-500"
+                />
+              </div>
+
+              {/* AI Recommendation Banner */}
+              {aiResult && (
+                <div className="p-3.5 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <div>
+                    <span className="font-bold text-indigo-300">🤖 AI Recommendation ({aiResult.confidence}% confidence):</span>
+                    <span className="text-sky-300 ml-2 font-bold">{aiResult.category}</span> ({aiResult.priority} Priority)
+                    <div className="text-[11px] text-slate-400 mt-0.5">{aiResult.reason}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCategory(aiResult.category);
+                      setPriority(aiResult.priority);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs"
+                  >
+                    Apply Suggestion
+                  </button>
+                </div>
+              )}
+
+              {/* Incident Date & Location */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Incident Date</label>
+                  <input
+                    type="date"
+                    value={incidentDate}
+                    onChange={e => setIncidentDate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Incident Location</label>
+                  <input
+                    type="text"
+                    value={incidentLocation}
+                    onChange={e => setIncidentLocation(e.target.value)}
+                    placeholder="e.g. Block B, Kaveri Hostel, LH-402"
+                    className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Priority & Supporting Evidence Upload */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Urgency Priority</label>
+                  <select
+                    value={priority}
+                    onChange={e => setPriority(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs font-semibold"
+                  >
+                    <option value="Low">Low Priority</option>
+                    <option value="Medium">Medium Priority</option>
+                    <option value="High">High Priority</option>
+                    <option value="Critical">Critical Priority</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Upload Supporting Evidence</label>
+                  <input
+                    type="file"
+                    id="evidence-file-input"
+                    onChange={e => setEvidenceName(e.target.files[0]?.name || '')}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="evidence-file-input"
+                    className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-dashed border-slate-700 hover:border-sky-500 text-slate-300 text-xs flex justify-between items-center cursor-pointer"
+                  >
+                    <span className="truncate">{evidenceName || 'Attach photo, doc or PDF'}</span>
+                    <span className="text-sky-400 font-bold ml-2">Browse</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Anonymous Shielding Option */}
+              <div className="p-3.5 rounded-xl bg-navy-950 border border-slate-800">
+                <label className="flex items-start space-x-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isAnonymous}
+                    onChange={e => setIsAnonymous(e.target.checked)}
+                    className="mt-0.5 rounded text-sky-500 bg-slate-800 border-slate-700"
+                  />
+                  <div>
+                    <span className="text-xs font-bold text-white block">🕵️ Submit as Anonymous Grievance</span>
+                    <span className="text-[11px] text-slate-400 block leading-relaxed">
+                      Your identity (name, roll no, email) will be concealed from all department authorities to prevent any peer or faculty retaliation.
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Form Action Buttons */}
+              <div className="pt-3 border-t border-slate-800 flex justify-end space-x-3">
+                <button type="button" onClick={onClose} className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white">
+                  Cancel
+                </button>
+                <button type="submit" className="px-6 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white shadow-lg shadow-sky-500/25">
+                  Submit & Generate ID →
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+
+    // ====================================================================
+    // COMPONENT: COMPLAINT DETAILS & CERTIFIED TIMELINE MODAL
+    // ====================================================================
+    function ComplaintTimelineModal({ complaint, onClose, onPrint }) {
+      const stages = COMPLAINT_STAGES.map(s => s.key);
+      const currentStepIdx = stages.indexOf(complaint.status);
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-navy-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+            
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono text-sm font-black text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded-lg border border-sky-500/20">
+                    {complaint.complaintId}
+                  </span>
+                  <span className="text-xs font-bold text-slate-200 px-2 py-0.5 rounded bg-navy-950 border border-slate-700">
+                    {complaint.category}
+                  </span>
+                  {complaint.isSampleData && (
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                      DEMO SAMPLE
+                    </span>
+                  )}
+                </div>
+                <h3 className="text-lg font-bold text-white mt-1.5">{complaint.title}</h3>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button onClick={onPrint} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700">
+                  🖨️ PDF
+                </button>
+                <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold hover:text-white">✕</button>
+              </div>
+            </div>
+
+            {/* Visual Stepper */}
+            <div className="my-5 p-4 rounded-xl bg-navy-950 border border-slate-800">
+              <div className="text-xs font-bold text-slate-400 uppercase mb-3 flex justify-between">
+                <span>Certified Progress Pipeline</span>
+                <span className="text-sky-400">{complaint.status}</span>
+              </div>
+              <div className="grid grid-cols-5 gap-2 text-center">
+                {stages.map((stage, idx) => (
+                  <div key={stage}>
+                    <div className={`w-5 h-5 mx-auto rounded-full flex items-center justify-center text-[9px] font-black mb-1 ${idx <= currentStepIdx ? (complaint.status === 'Resolved' || complaint.status === 'Closed' ? 'bg-emerald-400 text-slate-900' : 'bg-sky-400 text-slate-900') : 'bg-slate-800 text-slate-500'}`}>
+                      {idx <= currentStepIdx ? '✓' : idx + 1}
+                    </div>
+                    <span className="text-[10px] text-slate-300 font-semibold block truncate">{stage}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Complaint Fact Sheet */}
+            <div className="p-4 rounded-xl bg-navy-950 border border-slate-800 text-xs text-slate-300 space-y-2 mb-5">
+              <div><strong>Complainant:</strong> {complaint.isAnonymous ? 'Confidential / Shielded Anonymous Student' : `${complaint.studentName} (${complaint.studentRegisterNo})`}</div>
+              <div><strong>Assigned Redressal Body:</strong> {complaint.assignedAuthority}</div>
+              <div><strong>Location & Date:</strong> {complaint.incidentLocation} ({complaint.incidentDate})</div>
+              <div className="pt-2 border-t border-slate-800 leading-relaxed text-slate-200">
+                <strong>Description:</strong> {complaint.description}
+              </div>
+              {complaint.evidenceUrl && (
+                <div className="pt-2 border-t border-slate-800">
+                  <span className="font-bold text-sky-400 block mb-1">Attached Evidence:</span>
+                  <img src={complaint.evidenceUrl} alt="Evidence" className="max-h-48 rounded-lg object-cover border border-slate-700" />
+                </div>
+              )}
+            </div>
+
+            {/* Action Timeline Audit Trail */}
+            <div>
+              <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-3 flex items-center space-x-1.5">
+                <span>🕒</span>
+                <span>Certified Action Audit Trail</span>
+              </h4>
+              <div className="space-y-3 pl-2 border-l-2 border-sky-500/30 ml-2">
+                {(complaint.timeline || []).map((t, idx) => (
+                  <div key={idx} className="pl-4 relative">
+                    <div className="absolute -left-[19px] top-1.5 w-2.5 h-2.5 rounded-full bg-sky-400 ring-4 ring-navy-900" />
+                    <div className="text-xs font-bold text-white">{t.title}</div>
+                    <div className="text-xs text-slate-300 mt-0.5">{t.notes}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">
+                      {new Date(t.timestamp).toLocaleString()} — Action by <strong>{t.performedBy}</strong> ({t.role})
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-6 pt-3 border-t border-slate-800 text-right">
+              <button onClick={onClose} className="px-5 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white">
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+
+    // ====================================================================
+    // COMPONENT: AUTHENTICATION & DEMO LOGIN MODAL
+    // ====================================================================
+    function AuthModal({ onClose, onLogin, onRegister, users, initialTab }) {
+      const [tab, setTab] = useState(initialTab || 'student'); // 'student', 'admin', 'register'
+      
+      // Form fields
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+      const [errorMsg, setErrorMsg] = useState('');
+
+      // Student registration fields
+      const [regFullName, setRegFullName] = useState('');
+      const [regEmail, setRegEmail] = useState('');
+      const [regPassword, setRegPassword] = useState('studentkit1');
+      const [regNo, setRegNo] = useState('');
+      const [regDept, setRegDept] = useState('Computer Science & Engineering');
+      const [regYear, setRegYear] = useState('3rd Year');
+      const [regHostel, setRegHostel] = useState(true);
+      const [regHostelName, setRegHostelName] = useState('Cauvery Boys Hostel');
+
+      // Quick autofill buttons
+      const handleAutofillStudent = (stu) => {
+        setEmail('studentskit@gmail.com');
+        setPassword('studentkit1');
+        onLogin(stu);
+      };
+
+      const handleAutofillAdmin = (adm) => {
+        setEmail(adm.email);
+        setPassword('admin1230');
+        onLogin(adm);
+      };
+
+      const handleLoginSubmit = (e) => {
+        e.preventDefault();
+        setErrorMsg('');
+
+        const targetUser = users.find(u => {
+          const emailMatch =
+            u.email.toLowerCase() === email.toLowerCase().trim() ||
+            (u.altEmail && u.altEmail.toLowerCase() === email.toLowerCase().trim()) ||
+            u.fullName.toLowerCase() === email.toLowerCase().trim();
+          const passMatch = u.password === password.trim();
+          const roleMatch = tab === 'admin' ? u.role === 'admin' : u.role === 'student';
+          return emailMatch && passMatch && roleMatch;
+        });
+
+        if (targetUser) {
+          onLogin(targetUser);
+        } else {
+          setErrorMsg('Invalid email or password for this role. Use the 1-Click buttons below to test immediately.');
+        }
+      };
+
+      const handleRegisterSubmit = (e) => {
+        e.preventDefault();
+        if (!regFullName || !regEmail) {
+          setErrorMsg('Please enter name and institutional email.');
+          return;
+        }
+        onRegister({
+          fullName: regFullName,
+          email: regEmail,
+          password: regPassword,
+          registerNo: regNo || `711522CS${Math.floor(100 + Math.random() * 900)}`,
+          department: regDept,
+          yearOfStudy: regYear,
+          hostelResident: regHostel,
+          hostelName: regHostel ? regHostelName : 'Day Scholar'
+        });
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-navy-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl relative my-8">
+            
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div>
+                <h3 className="text-xl font-black text-white">Access Justice Campus</h3>
+                <p className="text-xs text-sky-400">Secure Role-Based Student & Admin Authentication</p>
+              </div>
+              <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 text-slate-300 font-bold hover:text-white">✕</button>
+            </div>
+
+            {/* Tab Switcher: Student vs Admin vs Register */}
+            <div className="grid grid-cols-3 gap-1 p-1 bg-navy-950 rounded-xl my-4 text-xs font-bold text-center">
+              <button
+                type="button"
+                onClick={() => { setTab('student'); setErrorMsg(''); }}
+                className={`py-2 rounded-lg transition-all ${tab === 'student' ? 'bg-sky-500 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+              >
+                🎓 Student
+              </button>
+              <button
+                type="button"
+                onClick={() => { setTab('admin'); setErrorMsg(''); }}
+                className={`py-2 rounded-lg transition-all ${tab === 'admin' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+              >
+                🛡️ Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => { setTab('register'); setErrorMsg(''); }}
+                className={`py-2 rounded-lg transition-all ${tab === 'register' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-white'}`}
+              >
+                📝 Register
+              </button>
+            </div>
+
+            {errorMsg && (
+              <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs mb-3">
+                {errorMsg}
+              </div>
+            )}
+
+            {/* 1. Student / Admin Login Form */}
+            {tab !== 'register' ? (
+              <form onSubmit={handleLoginSubmit} className="space-y-3.5">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">
+                    {tab === 'student' ? 'Student Email / Username' : 'Admin Authority Email / Username'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder={tab === 'student' ? 'studentskit@gmail.com or Dharsan' : 'oviya.admin@justicecampus.edu'}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder={tab === 'student' ? 'studentkit1' : 'admin1230'}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs sm:text-sm focus:outline-none focus:border-sky-500"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold text-white shadow-lg transition-all ${tab === 'admin' ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-sky-500 hover:bg-sky-400 shadow-sky-500/25'}`}
+                >
+                  Sign In to {tab === 'admin' ? 'Admin Authority Console' : 'Student Portal'} →
+                </button>
+
+                {/* 1-Click Fast Demonstration Fillers for Hackathon Evaluation */}
+                <div className="pt-3 border-t border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 block mb-2">
+                    ⚡ 1-Click Quick Login for Hackathon Jury:
+                  </span>
+
+                  {tab === 'student' ? (
+                    <div className="space-y-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleAutofillStudent(users[0])}
+                        className="w-full p-2 rounded-xl bg-navy-950 border border-slate-800 hover:border-sky-400 text-left flex items-center justify-between text-xs"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span>🎓</span>
+                          <span className="font-bold text-white">Dharsan</span>
+                          <span className="text-slate-400 text-[10px]">(studentskit@gmail.com / studentkit1)</span>
+                        </div>
+                        <span className="text-sky-400 font-bold text-[10px]">Auto-Fill →</span>
+                      </button>
+
+                      <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                        <button type="button" onClick={() => handleAutofillStudent(users[1])} className="p-1.5 rounded-lg bg-navy-950 border border-slate-800 hover:border-sky-400 text-left text-slate-300">
+                          🎓 Kaviya (studentkit1)
+                        </button>
+                        <button type="button" onClick={() => handleAutofillStudent(users[2])} className="p-1.5 rounded-lg bg-navy-950 border border-slate-800 hover:border-sky-400 text-left text-slate-300">
+                          🎓 Jeevitha (studentkit1)
+                        </button>
+                        <button type="button" onClick={() => handleAutofillStudent(users[3])} className="p-1.5 rounded-lg bg-navy-950 border border-slate-800 hover:border-sky-400 text-left text-slate-300">
+                          🎓 Sachin (studentkit1)
+                        </button>
+                        <button type="button" onClick={() => handleAutofillStudent(users[4])} className="p-1.5 rounded-lg bg-navy-950 border border-slate-800 hover:border-sky-400 text-left text-slate-300">
+                          🎓 Nethra (studentkit1)
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleAutofillAdmin(users[5])}
+                        className="w-full p-2 rounded-xl bg-navy-950 border border-slate-800 hover:border-indigo-400 text-left flex items-center justify-between text-xs"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span>🛡️</span>
+                          <span className="font-bold text-white">Dr. Oviya (Chairperson)</span>
+                          <span className="text-slate-400 text-[10px]">(admin1230)</span>
+                        </div>
+                        <span className="text-indigo-400 font-bold text-[10px]">Auto-Fill →</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => handleAutofillAdmin(users[6])}
+                        className="w-full p-2 rounded-xl bg-navy-950 border border-slate-800 hover:border-indigo-400 text-left flex items-center justify-between text-xs"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <span>🛡️</span>
+                          <span className="font-bold text-white">Dr. Dhilipkumar (Disciplinary Head)</span>
+                          <span className="text-slate-400 text-[10px]">(admin1230)</span>
+                        </div>
+                        <span className="text-indigo-400 font-bold text-[10px]">Auto-Fill →</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </form>
+            ) : (
+              /* 2. New Student Registration Form */
+              <form onSubmit={handleRegisterSubmit} className="space-y-3">
+                <div>
+                  <label className="text-xs font-bold text-slate-300 block mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={regFullName}
+                    onChange={e => setRegFullName(e.target.value)}
+                    placeholder="e.g. Arun Kumar"
+                    className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={regEmail}
+                      onChange={e => setRegEmail(e.target.value)}
+                      placeholder="arun@justicecampus.edu"
+                      className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Roll / Register No</label>
+                    <input
+                      type="text"
+                      value={regNo}
+                      onChange={e => setRegNo(e.target.value)}
+                      placeholder="711522CS210"
+                      className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Department</label>
+                    <select
+                      value={regDept}
+                      onChange={e => setRegDept(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs"
+                    >
+                      <option value="Computer Science & Engineering">CSE</option>
+                      <option value="Artificial Intelligence & Data Science">AI & DS</option>
+                      <option value="Information Technology">IT</option>
+                      <option value="Mechanical Engineering">Mechanical</option>
+                      <option value="Electronics & Communication Engg">ECE</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-300 block mb-1">Year of Study</label>
+                    <select
+                      value={regYear}
+                      onChange={e => setRegYear(e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl bg-navy-950 border border-slate-700 text-white text-xs"
+                    >
+                      <option value="1st Year">1st Year</option>
+                      <option value="2nd Year">2nd Year</option>
+                      <option value="3rd Year">3rd Year</option>
+                      <option value="4th Year">4th Year</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="p-2.5 rounded-xl bg-navy-950 border border-slate-800">
+                  <label className="flex items-center space-x-2 cursor-pointer text-xs">
+                    <input
+                      type="checkbox"
+                      checked={regHostel}
+                      onChange={e => setRegHostel(e.target.checked)}
+                      className="rounded text-sky-500 bg-slate-800"
+                    />
+                    <span className="font-bold text-slate-200">Hostel Resident</span>
+                  </label>
+                  {regHostel && (
+                    <input
+                      type="text"
+                      value={regHostelName}
+                      onChange={e => setRegHostelName(e.target.value)}
+                      placeholder="Hostel Name & Room Number"
+                      className="w-full mt-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs"
+                    />
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-white text-xs font-bold shadow-lg shadow-sky-500/25 mt-2"
+                >
+                  Create Student Account & Enter Portal →
+                </button>
+              </form>
+            )}
+
+          </div>
+        </div>
+      );
+    }
+
+    // Render the React application into the root element
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<JusticeCampusApp />);
+  </script>
+</body>
+</html>
